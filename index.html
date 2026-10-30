@@ -81,14 +81,15 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 @media (min-width:860px){.grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);grid-template-areas:"hero cal" "hist cal";align-items:start}}
 
 /* hero */
-.hero{grid-area:hero;background:linear-gradient(180deg,var(--panel) 0%,var(--panel-2) 100%);border-radius:var(--r);padding:22px;display:flex;flex-direction:column;gap:14px}
-.big{display:flex;align-items:flex-end;gap:14px}
-.big .num{font-family:var(--f-display);font-weight:700;font-size:120px;line-height:.8;color:var(--oxide);font-variant-numeric:tabular-nums}
-.big .unit{font-family:var(--f-display);font-weight:600;font-size:26px;line-height:1.05;text-transform:uppercase;letter-spacing:.03em;padding-bottom:4px}
-.lead{margin:0 0 -4px;font-size:18px;font-weight:600}
+.hero{grid-area:hero;background:linear-gradient(180deg,var(--panel) 0%,var(--panel-2) 100%);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.big{display:flex;align-items:center;gap:14px}
+.big .txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.big .num{font-family:var(--f-display);font-weight:700;font-size:72px;line-height:.85;color:var(--oxide);font-variant-numeric:tabular-nums}
+.big .unit{font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1.05;text-transform:uppercase;letter-spacing:.02em}
+.lead{font-size:15px;font-weight:600;color:var(--muted)}
 .big.done .num{color:var(--ok)}
-.panes{display:flex;flex-wrap:wrap;gap:4px}
-.pane{width:20px;height:28px;border:2px solid var(--frame);border-radius:1px}
+.panes{display:flex;flex-wrap:wrap;gap:3px}
+.pane{width:14px;height:20px;border:2px solid var(--frame);border-radius:1px}
 .pane.f{background:var(--oxide);border-color:var(--oxide)}
 .pane.x{background:var(--oxide);border-color:var(--oxide);opacity:.45}
 .line{margin:0;font-size:16px;font-weight:500}
@@ -188,7 +189,7 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--wall);padding:10px 16px;border-radius:var(--r);font-weight:600;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:20}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 @media (max-width:420px){
-  .big .num{font-size:100px}
+  .big .num{font-size:64px}
   .sign{font-size:clamp(17px,5.4vw,22px)}
   .hbtns{gap:6px}
   .icon-btn{padding:0 9px}
@@ -222,8 +223,7 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
 
   <div class="grid">
     <section class="hero" aria-live="polite">
-      <p class="lead" id="heroLead">Zostało Ci jeszcze</p>
-      <div class="big" id="big"><span class="num" id="heroNum">0</span><span class="unit" id="heroUnit">dni w biurze</span></div>
+      <div class="big" id="big"><span class="num" id="heroNum">0</span><span class="txt"><span class="lead" id="heroLead">Zostało Ci jeszcze</span><span class="unit" id="heroUnit">dni w biurze</span></span></div>
       <div class="panes" id="panes" aria-hidden="true"></div>
       <div class="chips" id="chips" hidden></div>
       <details><summary>🧮 Jak to liczę</summary><div class="calc" id="calc"></div></details>
