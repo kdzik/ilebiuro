@@ -82,11 +82,13 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 
 /* hero */
 .hero{grid-area:hero;background:linear-gradient(180deg,var(--panel) 0%,var(--panel-2) 100%);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
-.big{display:flex;align-items:center;gap:14px}
-.big .txt{display:flex;flex-direction:column;gap:2px;min-width:0}
-.big .num{font-family:var(--f-display);font-weight:700;font-size:72px;line-height:.85;color:var(--oxide);font-variant-numeric:tabular-nums}
-.big .unit{font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1.05;text-transform:uppercase;letter-spacing:.02em}
-.lead{font-size:15px;font-weight:600;color:var(--muted)}
+.big{margin:0;font-size:22px;font-weight:600;line-height:1.15;text-wrap:balance;text-align:center}
+.hero .panes,.hero .chips{justify-content:center}
+.hero details{text-align:center}
+.hero details .calc{text-align:left;max-width:320px;margin-left:auto;margin-right:auto}
+.big .num{font-family:var(--f-display);font-weight:800;font-size:60px;line-height:.9;color:var(--oxide);font-variant-numeric:tabular-nums;vertical-align:-6px}
+.big .unit{font-weight:700}
+.big .lead{color:var(--ink)}
 .big.done .num{color:var(--ok)}
 .panes{display:flex;flex-wrap:wrap;gap:3px}
 .pane{width:14px;height:20px;border:2px solid var(--frame);border-radius:1px}
@@ -189,7 +191,8 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--wall);padding:10px 16px;border-radius:var(--r);font-weight:600;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:20}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 @media (max-width:420px){
-  .big .num{font-size:64px}
+  .big{font-size:20px}
+  .big .num{font-size:52px}
   .sign{font-size:clamp(17px,5.4vw,22px)}
   .hbtns{gap:6px}
   .icon-btn{padding:0 9px}
@@ -223,7 +226,7 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
 
   <div class="grid">
     <section class="hero" aria-live="polite">
-      <div class="big" id="big"><span class="num" id="heroNum">0</span><span class="txt"><span class="lead" id="heroLead">Zostało Ci jeszcze</span><span class="unit" id="heroUnit">dni w biurze</span></span></div>
+      <p class="big" id="big"><span class="lead" id="heroLead">Zostało Ci jeszcze</span> <span class="num" id="heroNum">0</span> <span class="unit" id="heroUnit">dni w biurze</span></p>
       <div class="panes" id="panes" aria-hidden="true"></div>
       <div class="chips" id="chips" hidden></div>
       <details><summary>🧮 Jak to liczę</summary><div class="calc" id="calc"></div></details>
@@ -407,9 +410,9 @@ function render(){
   $('big').classList.toggle('done', s.left===0);
   $('heroNum').textContent = s.left;
   if(s.left===0){
-    $('heroLead').textContent = '🎉 Ten miesiąc masz zaliczony';
+    $('heroLead').textContent = '';
     $('heroNum').textContent = '✓';
-    $('heroUnit').textContent = 'Wymóg spełniony';
+    $('heroUnit').textContent = 'Ten miesiąc masz zaliczony 🎉';
   } else if(s.past){
     $('heroLead').textContent = '😬 Zabrakło Ci';
     $('heroUnit').textContent = pl(s.left,'dnia','dni','dni') + ' w biurze';
