@@ -63,7 +63,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .icon-btn:hover{background:var(--oxide-soft)}
 
 .monthbar{display:flex;align-items:center;gap:8px}
-.monthbar h2{margin:0 0 0 6px;flex:1;min-width:0;display:flex;flex-direction:column;line-height:1}
+.monthbar h2{margin:0;flex:1;min-width:0;display:flex;flex-direction:column;line-height:1}
 .monthbar h2 .mn{font-family:var(--f-display);font-weight:700;font-size:22px;letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .monthbar h2 .my{font-size:13px;font-weight:600;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
 .icon-btn{white-space:nowrap}
@@ -210,10 +210,10 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
   </header>
 
   <div class="monthbar">
-    <button class="nav" id="prev" aria-label="Poprzedni miesiąc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <button class="nav" id="next" aria-label="Następny miesiąc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
     <h2 id="monthTitle"><span class="mn">Październik</span><span class="my">2026</span></h2>
     <button class="todaybtn" id="todayBtn" type="button" aria-label="Wróć do bieżącego miesiąca">↩ Bieżący</button>
+    <button class="nav" id="prev" aria-label="Poprzedni miesiąc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <button class="nav" id="next" aria-label="Następny miesiąc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
   </div>
 
   <div class="grid">
