@@ -184,6 +184,8 @@ dialog::backdrop{background:rgba(14,12,11,.78);-webkit-backdrop-filter:blur(6px)
 .rulebox .stepper output{width:44px;height:38px;font-size:20px}
 .stepper input{padding:0;margin:0;-moz-appearance:textfield;appearance:textfield;line-height:44px}
 .stepper input::-webkit-inner-spin-button,.stepper input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.howto{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14.5px;line-height:1.5}
+.howto .key{display:inline-block;padding:0 7px;border:1.5px solid var(--panel-2);border-radius:var(--r);background:var(--wall);font-weight:600;font-size:13.5px;white-space:nowrap}
 .srow{display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:600}
 .btn{height:42px;padding:0 16px;border-radius:var(--r);border:1.5px solid var(--frame);background:var(--card);font-weight:600;cursor:pointer}
 .btn.primary{background:var(--oxide);border-color:var(--oxide);color:var(--on-oxide)}
@@ -214,7 +216,6 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
   <header>
     <h1 class="sign">Dni w biurze</h1>
     <div class="hbtns">
-      <button class="icon-btn" id="installBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="lbl">Zainstaluj</span></button>
       <button class="icon-btn" id="settingsBtn" aria-label="Ustawienia"><span id="pctLabel">40%</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
     </div>
   </header>
@@ -272,6 +273,15 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
       <p>Opcjonalne. Zaznacz kilka dni, jeśli możesz je dowolnie łączyć.</p>
       <div id="ruleSet" style="display:flex;flex-direction:column;gap:10px"></div>
       <button type="button" class="btn" id="addRule" style="align-self:flex-start">+ Dodaj wymóg</button>
+    </section>
+    <section id="installInfo">
+      <h3>📲 Zainstaluj na telefonie</h3>
+      <button type="button" class="btn primary" id="installBtn" style="align-self:flex-start" hidden>📲 Zainstaluj aplikację</button>
+      <ul class="howto" id="howto">
+        <li><b>iPhone (Safari):</b> stuknij <span class="key">Udostępnij</span>, potem <span class="key">Do ekranu początkowego</span>.</li>
+        <li><b>Android (Chrome):</b> stuknij <span class="key">⋮</span>, potem <span class="key">Zainstaluj aplikację</span>.</li>
+      </ul>
+      <p>Aplikacja działa wtedy jak zwykła apka, także bez internetu.</p>
     </section>
     <div class="btns" style="justify-content:flex-end"><button class="btn primary" value="close">Gotowe</button></div>
   </form>
@@ -554,12 +564,21 @@ var tt; function toast(m){ var t=$('toast'); t.textContent=m; t.classList.add('o
 
 // PWA
 var deferred;
-window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferred = e; $('installBtn').hidden = false; });
-$('installBtn').addEventListener('click', function(){ if(!deferred) return; deferred.prompt(); deferred = null; $('installBtn').hidden = true; });
+// Android / desktop Chrome & Edge: one-tap install button. iPhone has no such API, so it keeps the manual steps.
+window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferred = e; $('installBtn').hidden = false; $('howto').hidden = true; });
+$('installBtn').addEventListener('click', function(){
+  if(!deferred) return;
+  deferred.prompt();
+  deferred.userChoice.then(function(r){ if(r && r.outcome === 'accepted'){ $('installInfo').hidden = true; } }).catch(function(){});
+  deferred = null; $('installBtn').hidden = true; $('howto').hidden = false;
+});
+window.addEventListener('appinstalled', function(){ $('installInfo').hidden = true; });
 if('serviceWorker' in navigator && location.protocol === 'https:'){
   window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
 }
 
+// hide install tips when already running as an installed app
+try{ if((window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone) $('installInfo').hidden = true; }catch(e){}
 setTool(state.settings.tool);
 render();
 window.__biuro = {stats:stats, state:function(){ return state; }};
