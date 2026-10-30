@@ -44,6 +44,9 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+/* no double-tap zoom: fast taps on days must not zoom the page (pinch zoom still works) */
+html,body,button,.c{touch-action:manipulation}
+button,.c,.tools,.cal{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{margin:0}
 body{
   background:var(--wall); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.45;
