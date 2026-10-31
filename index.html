@@ -65,13 +65,15 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .icon-btn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;border:0;background:none;color:var(--oxide);border-radius:10px;cursor:pointer;font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
 .icon-btn svg{width:22px;height:22px}
 @media (hover:hover){.icon-btn:hover{background:var(--oxide-soft)}}
-.monthbar .icon-btn{margin-left:6px}
 
-.monthbar{display:flex;align-items:center;gap:8px}
-.mhead{flex:1;min-width:0;display:flex;flex-direction:column}
+/* month switcher centered: [Dziś]  ‹ Październik 2026 ›  [settings] */
+.monthbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.mbl{justify-self:start;min-width:0}
+.mbr{justify-self:end}
+.mnav{display:flex;align-items:center;gap:6px;min-width:0}
+.mhead{min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center}
 .monthbar h2{margin:0;font-weight:700;font-size:30px;line-height:1.05;letter-spacing:-.01em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.myrow{display:flex;align-items:center;gap:10px;margin-top:4px;min-height:22px}
-.monthbar .my{font-size:15px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.monthbar .my{margin-top:2px;font-size:15px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
 .icon-btn{white-space:nowrap}
 .sign{white-space:nowrap}
 .todaybtn{flex:none;height:30px;padding:0 10px;font-size:13px!important;border:0;border-radius:999px;background:var(--oxide);color:var(--on-oxide);font-weight:700;font-size:15px;cursor:pointer;white-space:nowrap}
@@ -228,7 +230,9 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
   /* phone: the app name is already on the home screen icon; give its row to the calendar */
   header{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
   #pctLabel{display:none}
-  .monthbar .icon-btn{margin-left:2px;width:40px;padding:0;justify-content:center}
+  .monthbar .icon-btn{width:40px;padding:0;justify-content:center}
+  .monthbar{gap:4px}
+  .mnav{gap:2px}
   .c .t{font-size:9.5px}
   .icon-btn .lbl{display:none}
 }
@@ -242,13 +246,15 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
   </header>
 
   <div class="monthbar">
-    <div class="mhead">
-      <h2 id="monthTitle">Październik</h2>
-      <div class="myrow"><span class="my" id="monthYear">2026</span><button class="todaybtn" id="todayBtn" type="button" aria-label="Wróć do bieżącego miesiąca" title="Wróć do bieżącego miesiąca">↩ Wróć do dziś</button></div>
+    <div class="mbl"><button class="todaybtn" id="todayBtn" type="button" aria-label="Wróć do bieżącego miesiąca" title="Wróć do bieżącego miesiąca">Dziś</button></div>
+    <div class="mnav">
+      <button class="nav" id="prev" aria-label="Poprzedni miesiąc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="mhead"><h2 id="monthTitle">Październik</h2><span class="my" id="monthYear">2026</span></div>
+      <button class="nav" id="next" aria-label="Następny miesiąc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
     </div>
-    <button class="nav" id="prev" aria-label="Poprzedni miesiąc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <button class="nav" id="next" aria-label="Następny miesiąc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
-    <button class="icon-btn" id="settingsBtn" aria-label="Ustawienia"><span id="pctLabel">40%</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    <div class="mbr">
+      <button class="icon-btn" id="settingsBtn" aria-label="Ustawienia"><span id="pctLabel">40%</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    </div>
   </div>
 
   <div class="grid">
