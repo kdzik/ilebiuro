@@ -144,12 +144,6 @@ summary::-webkit-details-marker{display:none}
 @media (max-width:420px){.c .hn{font-size:8.5px;-webkit-line-clamp:2}}
 .cal .c .em-t{font-size:13px;line-height:1;overflow:visible}
 .hint{font-size:13px;color:var(--muted);margin:0;text-align:center}
-.hint.mode{color:var(--ink);font-weight:600;padding:8px 12px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
-.hint.mode.vac{background:var(--leaf-soft)} .hint.mode.sick{background:var(--slate-soft)}
-.hint.mode .btn{height:34px;padding:0 12px}
-/* Urlop / L4 mode: a colored ring around the month */
-.cal.t-vac{outline:2px solid var(--leaf);outline-offset:4px;border-radius:12px}
-.cal.t-sick{outline:2px solid var(--slate);outline-offset:4px;border-radius:12px}
 /* no grid lines: days are soft rounded tiles separated by space */
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .dow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:center;padding:2px 0 4px}
@@ -506,19 +500,11 @@ function render(){
   renderHint();
 }
 
-var TOOL_HINT = {vac:'🌴 Zaznaczasz urlop. Stuknij dni urlopu.', sick:'🤒 Zaznaczasz L4. Stuknij dni zwolnienia.'};
+// first-run tip only; Urlop and L4 work exactly like Biuro, no extra banners
 function renderHint(){
-  var t = state.settings.tool, h = $('hint');
-  $('cal').classList.toggle('t-vac', t==='vac'); $('cal').classList.toggle('t-sick', t==='sick');
-  h.className = 'hint';
-  if(t !== 'office'){
-    h.className = 'hint mode ' + t;
-    h.innerHTML = '<span>' + TOOL_HINT[t] + '</span><button type="button" class="btn" data-back="1">Gotowe, wróć do 🏢 Biuro</button>';
-    h.hidden = false;
-  } else {
-    h.textContent = '👆 Stuknij dzień, w którym jesteś (lub będziesz) w biurze.';
-    h.hidden = Object.keys(state.days).length > 0;
-  }
+  var h = $('hint');
+  h.textContent = '👆 Wybierz Biuro, Urlop albo L4 i stuknij dzień w kalendarzu.';
+  h.hidden = Object.keys(state.days).length > 0;
 }
 
 function renderCal(){
@@ -567,7 +553,6 @@ $('cal').addEventListener('click', function(e){
   save(); render();
 });
 document.querySelectorAll('.tool').forEach(function(b){ b.addEventListener('click', function(){ setTool(b.dataset.tool); }); });
-$('hint').addEventListener('click', function(e){ if(e.target.closest('[data-back]')) setTool('office'); });
 $('markToday').addEventListener('click', function(){
   var k = todayKey();
   if(state.days[k] === 'office'){ delete state.days[k]; toast('Cofnięto dzisiejszy dzień'); }
