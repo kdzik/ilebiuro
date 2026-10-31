@@ -18,29 +18,31 @@
 <style>
 /* Light, iOS-like layout: white cards on a quiet ground, no grid lines, borderless
    toolbar buttons, a standard segmented control. Color carries meaning only:
-   oxide = office / action, leaf = vacation / done, slate = sick leave. */
+   oxide = office / action, leaf = vacation / done. */
 :root{
   --wall:#F2F1EE; --card:#FFFFFF; --panel:#DEDCD7; --panel-2:#CECCC6;
   --ink:#262624; --muted:#6B6863;
   --oxide:#A8473C; --on-oxide:#FFFFFF; --oxide-soft:#F2DDD8; --frame:#B5564A;
-  --leaf:#4C7846; --leaf-soft:#DCE8D7; --slate:#566273; --slate-soft:#DCE1E8;
+  --leaf:#4C7846; --leaf-soft:#DCE8D7;
   --warn:#8F530C; --ok:#3F7A3A;
   --f-display:"Avenir Next Condensed","Roboto Condensed","sans-serif-condensed","Arial Narrow",system-ui,sans-serif;
   --f-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  --r:4px; --r-card:16px;
+  --r:4px; --r-card:16px; --gut:16px;
+  /* motion, after Apple's guidance: quick, ease-out, a gentle spring for things that appear */
+  --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.56,.64,1);
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --wall:#18191A; --card:#1F2123; --panel:#26292B; --panel-2:#313437;
   --ink:#ECE9E4; --muted:#A39F98;
   --oxide:#D96B58; --on-oxide:#1B0E0B; --oxide-soft:#3B2420; --frame:#8C4136;
-  --leaf:#8BBA81; --leaf-soft:#223220; --slate:#A0ADBD; --slate-soft:#262D36;
+  --leaf:#8BBA81; --leaf-soft:#223220;
   --warn:#E7AE5C; --ok:#8BBA81; color-scheme:dark;
 }}
 :root[data-theme="dark"]{
   --wall:#18191A; --card:#1F2123; --panel:#26292B; --panel-2:#313437;
   --ink:#ECE9E4; --muted:#A39F98;
   --oxide:#D96B58; --on-oxide:#1B0E0B; --oxide-soft:#3B2420; --frame:#8C4136;
-  --leaf:#8BBA81; --leaf-soft:#223220; --slate:#A0ADBD; --slate-soft:#262D36;
+  --leaf:#8BBA81; --leaf-soft:#223220;
   --warn:#E7AE5C; --ok:#8BBA81; color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -51,13 +53,22 @@ button,.c,.tools,.cal{-webkit-user-select:none;user-select:none;-webkit-touch-ca
 html,body{margin:0}
 body{
   background:var(--wall); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.45;
-  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-left:max(var(--gut), env(safe-area-inset-left, 0px)); padding-right:max(var(--gut), env(safe-area-inset-right, 0px));
   padding-block:max(12px, env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-bottom, 0px));
   -webkit-tap-highlight-color:transparent;
 }
 button{font:inherit;color:inherit}
+/* press feedback: things shrink a touch under the finger, like iOS controls */
+.markday,.tool,.nav,.icon-btn,.todaybtn,.btn,.hrow,.chip,.done,.stepper button,.daypick button{transition:transform .15s var(--ease),background-color .2s,color .2s}
+.markday:active,.tool:active,.nav:active,.icon-btn:active,.todaybtn:active,.btn:active,.done:active,.stepper button:active,.daypick button:active{transform:scale(.95)}
+button.c{transition:transform .15s var(--ease)}
+button.c:active{transform:scale(.92)}
 :focus-visible{outline:2px solid var(--oxide);outline-offset:2px}
 .wrap{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+/* month pages: the current page follows the finger, neighbours are snapshots beside it */
+.pager{position:relative;margin-inline:calc(-1 * var(--gut));padding-inline:var(--gut);overflow-x:hidden;overflow-x:clip;touch-action:pan-y pinch-zoom}
+.page{display:flex;flex-direction:column;gap:16px;will-change:transform}
+.page.ghost{position:absolute;top:0;left:var(--gut);right:var(--gut);pointer-events:none}
 
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:6px}
 .sign{font-weight:700;font-size:17px;color:var(--oxide);margin:0;line-height:1}
@@ -99,7 +110,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 /* progress: a plain bar with its caption right under it */
 .prog{display:flex;flex-direction:column;align-items:center;gap:6px}
 .bar{width:100%;max-width:320px;height:8px;display:flex;gap:4px}
-.bar span{flex:1;border-radius:4px;background:var(--panel)}
+.bar span{flex:1;border-radius:4px;background:var(--panel);transition:background-color .35s var(--ease)}
 .bar .d{background:var(--oxide)}
 .bar .p{background:repeating-linear-gradient(135deg,var(--oxide) 0 2px,var(--card) 2px 5px)}
 .hero.ok .bar .d{background:var(--ok)}
@@ -128,13 +139,15 @@ summary::-webkit-details-marker{display:none}
 /* calendar */
 .calcard{grid-area:cal;display:flex;flex-direction:column;gap:12px;background:var(--card);border-radius:var(--r-card);padding:10px}
 /* segmented control, as on iOS */
-.tools{display:grid;grid-template-columns:repeat(3,1fr);background:rgba(118,118,128,.12);border-radius:10px;padding:2px;gap:2px}
+.tools{position:relative;display:grid;grid-template-columns:repeat(2,1fr);background:rgba(118,118,128,.12);border-radius:10px;padding:2px;gap:2px}
+.tools::before{content:"";position:absolute;top:2px;left:2px;width:calc(50% - 3px);height:calc(100% - 4px);background:var(--card);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04);transition:transform .35s var(--ease)}
+.tools[data-t="vac"]::before{transform:translateX(calc(100% + 2px))}
 .tool{border:0;background:none;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;cursor:pointer;font-size:15px}
 .tool .dot{width:14px;height:14px;border-radius:2px}
 .tool[data-tool="office"] .dot{background:var(--oxide)}
 .tool[data-tool="vac"] .dot{background:var(--leaf)}
-.tool[data-tool="sick"] .dot{background:var(--slate)}
-.tool[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04)}
+.tool{position:relative;z-index:1}
+.tool[aria-pressed="true"]{color:var(--ink)}
 .hols{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:14px}
 .hols li{display:flex;gap:10px;align-items:baseline}
 .hols b{color:var(--oxide);font-family:var(--f-display);font-size:17px;font-weight:600;min-width:76px;font-variant-numeric:tabular-nums}
@@ -155,10 +168,9 @@ summary::-webkit-details-marker{display:none}
 .c.hol .n,.c.hol .t{color:var(--oxide)}
 button.c{cursor:pointer}
 button.c:hover{background:var(--oxide-soft)}
-.c.past:not(.m-office):not(.m-vac):not(.m-sick) .n{color:var(--muted);opacity:.5}
+.c.past:not(.m-office):not(.m-vac) .n{color:var(--muted);opacity:.5}
 .c.m-office,.c.m-office:hover{background:var(--oxide);color:var(--on-oxide)}
 .c.m-vac,.c.m-vac:hover{background:var(--leaf-soft);color:var(--ink)}
-.c.m-sick,.c.m-sick:hover{background:var(--slate-soft);color:var(--ink)}
 .c.today{box-shadow:inset 0 0 0 2px var(--oxide)}
 .c.today .n{color:var(--oxide)!important}
 .c.m-office.today{box-shadow:none}
@@ -178,33 +190,53 @@ button.c:hover{background:var(--oxide-soft)}
 /* settings */
 dialog{border:0;padding:0;background:var(--card);color:var(--ink);border-radius:var(--r-card);width:min(460px,calc(100vw - 24px));max-height:calc(100dvh - 40px)}
 dialog::backdrop{background:rgba(14,12,11,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-.dlg{padding:20px;display:flex;flex-direction:column;gap:20px}
-.dlg h2{margin:0;font-size:24px;font-weight:700;letter-spacing:-.01em}
-.dlg section{display:flex;flex-direction:column;gap:10px}
-.dlg h3{margin:0;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.dlg p{margin:0;font-size:14px;color:var(--muted)}
-.stepper{display:flex;align-items:center;border:1.5px solid var(--frame);border-radius:var(--r);overflow:hidden;width:max-content}
-.stepper button{width:44px;height:44px;border:0;background:var(--card);font-size:20px;cursor:pointer}
-.stepper button:hover{background:var(--oxide-soft)}
-.stepper input,.stepper output{width:64px;height:44px;border:0;border-left:1.5px solid var(--frame);border-right:1.5px solid var(--frame);text-align:center;font-family:var(--f-display);font-size:22px;font-weight:600;background:var(--wall);color:var(--ink);display:grid;place-items:center;font-variant-numeric:tabular-nums}
-.rulebox{border:1.5px solid var(--panel-2);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--wall)}
+/* settings: what matters is open, everything optional is a collapsed row */
+.dlg{padding:14px 16px 18px;display:flex;flex-direction:column;gap:14px}
+.dlg-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.dlg h2{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em}
+.done{flex:none;width:32px;height:32px;margin-right:-2px;border:0;border-radius:50%;background:rgba(118,118,128,.12);color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.done svg{width:16px;height:16px}
+.dlg section{display:flex;flex-direction:column;gap:6px}
+.dlg h3{margin:0 4px;font-size:13px;font-weight:600;color:var(--muted)}
+.dlg p{margin:0}
+.group{background:var(--wall);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:10px}
+.note{font-size:13px;color:var(--muted)}
+.opt summary{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 12px;background:var(--wall);border-radius:12px;color:var(--ink);font-weight:600;font-size:15px}
+.opt summary > span:first-child{flex:1}
+.opt summary .val{color:var(--muted);font-weight:500;font-size:14px;text-align:right}
+.opt summary::after{content:"›";font-size:22px;line-height:1;color:var(--muted);transition:transform .15s}
+.opt[open] summary::after{transform:rotate(90deg)}
+.optbody{display:flex;flex-direction:column;gap:10px;padding:10px 2px 2px}
+.optbody .btn{align-self:flex-start}
+.ruleset{display:flex;flex-direction:column;gap:10px}
+.stepper{display:flex;align-items:center;background:var(--card);border-radius:10px;overflow:hidden;width:max-content}
+.stepper button{width:42px;height:40px;border:0;background:none;color:var(--oxide);font-size:22px;cursor:pointer}
+@media (hover:hover){.stepper button:hover{background:var(--oxide-soft)}}
+.stepper input,.stepper output{width:56px;height:40px;border:0;text-align:center;font-size:20px;font-weight:700;background:none;color:var(--ink);display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.rulebox{border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--wall)}
 .rtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-weight:600}
 .rtop .x{margin-left:auto;width:36px;height:36px;border:0;background:none;color:var(--muted);font-size:22px;cursor:pointer;border-radius:var(--r)}
 .rtop .x:hover{color:var(--oxide);background:var(--oxide-soft)}
-.daypick{display:grid;grid-template-columns:repeat(5,1fr);border:1.5px solid var(--frame);border-radius:var(--r);overflow:hidden;gap:1.5px;background:var(--frame)}
-.daypick button{height:40px;border:0;background:var(--card);font-weight:700;cursor:pointer}
+.daypick{display:grid;grid-template-columns:repeat(5,1fr);background:rgba(118,118,128,.12);border-radius:9px;padding:2px;gap:2px}
+.daypick button{height:34px;border:0;border-radius:7px;background:none;font-weight:600;cursor:pointer}
 .daypick button[aria-pressed="true"]{background:var(--oxide);color:var(--on-oxide)}
+.modes{position:relative}
+.modes::before{content:"";position:absolute;top:2px;left:2px;width:calc((100% - 8px) / 3);height:calc(100% - 4px);background:var(--card);border-radius:7px;box-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04);transition:transform .35s var(--ease)}
+.modes[data-m="month"]::before{transform:translateX(calc(100% + 2px))}
+.modes[data-m="week"]::before{transform:translateX(calc(200% + 4px))}
+.modes button{position:relative;z-index:1}
+.modes button[aria-pressed="true"]{background:none;color:var(--ink)}
 .modes{grid-template-columns:repeat(3,1fr)}
 .modes button{font-size:14px;line-height:1.1;padding:0 4px}
-.rdesc{font-size:13.5px;color:var(--muted);margin:0}
-.rulebox .stepper button{width:38px;height:38px}
-.rulebox .stepper output{width:44px;height:38px;font-size:20px}
-.stepper input{padding:0;margin:0;-moz-appearance:textfield;appearance:textfield;line-height:44px}
+.rdesc{font-size:13px;color:var(--muted);margin:0}
+.rulebox .stepper button{width:36px;height:34px}
+.rulebox .stepper output{width:36px;height:34px;font-size:17px}
+.stepper input{padding:0;margin:0;-moz-appearance:textfield;appearance:textfield;line-height:40px}
 .stepper input::-webkit-inner-spin-button,.stepper input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
-.howto{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14.5px;line-height:1.5}
-.howto .key{display:inline-block;padding:0 7px;border:1.5px solid var(--panel-2);border-radius:var(--r);background:var(--wall);font-weight:600;font-size:13.5px;white-space:nowrap}
+.howto{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.6}
+.howto .key{display:inline-block;padding:0 7px;border-radius:6px;background:var(--wall);font-weight:600;font-size:13.5px;white-space:nowrap}
 .srow{display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:600}
-.btn{height:42px;padding:0 16px;border-radius:var(--r);border:1.5px solid var(--frame);background:var(--card);font-weight:600;cursor:pointer}
+.btn{height:40px;padding:0 14px;border-radius:10px;border:0;background:var(--oxide-soft);color:var(--oxide);font-weight:600;cursor:pointer}
 .btn.primary{background:var(--oxide);border-color:var(--oxide);color:var(--on-oxide)}
 .btn.danger{color:var(--oxide)}
 .btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -213,7 +245,7 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 @media (max-width:420px){
   /* phone: keep the answer and the calendar's busy rows on the first screen */
-  .wrap{gap:12px}
+  .wrap,.page{gap:12px}
   header{padding-top:0}
   .hero{padding:12px 14px;gap:8px}
   .markday{min-height:46px}
@@ -230,7 +262,34 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
   .c .t{font-size:9.5px}
   .icon-btn .lbl{display:none}
 }
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* ---- animations ---- */
+@keyframes pop{0%{transform:scale(.8)}55%{transform:scale(1.07)}100%{transform:scale(1)}}
+@keyframes unpop{0%{transform:scale(.9)}100%{transform:scale(1)}}
+@keyframes emojiIn{0%{opacity:0;transform:translateY(5px) scale(.5)}100%{opacity:1;transform:none}}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes segIn{0%{transform:scaleY(1)}40%{transform:scaleY(1.9)}100%{transform:scaleY(1)}}
+@keyframes cheer{0%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+@keyframes reveal{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes sheetIn{from{opacity:0;transform:translateY(28px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes sheetOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(20px) scale(.98)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+.c.pop{animation:pop .42s var(--ease)}
+.c.pop .em-t{animation:emojiIn .38s var(--spring) .06s both}
+.c.unpop{animation:unpop .3s var(--ease)}
+.big .num{display:inline-block}
+.big .num.bump{animation:bump .42s var(--ease)}
+.bar span.grow{animation:segIn .45s var(--ease)}
+.hero.cheer .bar span{animation:cheer .5s var(--ease) calc(var(--i) * 45ms) both}
+.hero details[open] .calc,.opt[open] .optbody{animation:reveal .3s var(--ease)}
+dialog[open]{animation:sheetIn .38s var(--ease)}
+dialog[open]::backdrop{animation:fadeIn .3s ease}
+dialog.closing{animation:sheetOut .22s ease-in forwards}
+dialog.closing::backdrop{animation:fadeOut .22s ease-in forwards}
+.icon-btn svg{transition:transform .6s var(--ease)}
+.icon-btn.spin svg{transform:rotate(120deg)}
+.todaybtn:not(.off){animation:reveal .3s var(--ease)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after,::backdrop{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
@@ -239,6 +298,7 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
     <h1 class="sign">Dni w biurze</h1>
   </header>
 
+  <div class="pager" id="pager"><div class="page" id="page">
   <div class="monthbar">
     <div class="mbl"><button class="todaybtn" id="todayBtn" type="button" aria-label="Wróć do bieżącego miesiąca" title="Wróć do bieżącego miesiąca">Dziś</button></div>
     <div class="mnav">
@@ -268,7 +328,6 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
       <div class="tools" role="group" aria-label="Co zaznaczasz">
         <button class="tool" data-tool="office" aria-pressed="true"><span class="em">🏢</span>Biuro</button>
         <button class="tool" data-tool="vac" aria-pressed="false"><span class="em">🌴</span>Urlop</button>
-        <button class="tool" data-tool="sick" aria-pressed="false"><span class="em">🤒</span>L4</button>
       </div>
       <p class="hint" id="hint" aria-live="polite"></p>
       <div class="cal" id="cal"></div>
@@ -280,39 +339,45 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
       <div id="hist"></div>
     </section>
   </div>
+  </div></div>
 </div>
 
 <dialog id="dlg">
   <form method="dialog" class="dlg">
-    <h2>⚙️ Ustawienia</h2>
+    <div class="dlg-head"><h2>Ustawienia</h2><button class="done" value="close" aria-label="Zamknij"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <section>
-      <h3>🎯 Ile musisz być w biurze</h3>
-      <div class="daypick modes" role="group" aria-label="Sposób liczenia">
-        <button type="button" data-mode="pct">Procent</button>
-        <button type="button" data-mode="month">Na miesiąc</button>
-        <button type="button" data-mode="week">Na tydzień</button>
+      <h3>Ile musisz być w biurze</h3>
+      <div class="group">
+        <div class="daypick modes" role="group" aria-label="Sposób liczenia">
+          <button type="button" data-mode="pct">Procent</button>
+          <button type="button" data-mode="month">Na miesiąc</button>
+          <button type="button" data-mode="week">Na tydzień</button>
+        </div>
+        <div class="srow">
+          <span id="amtLabel">Procent dni roboczych</span>
+          <div class="stepper"><button type="button" data-amt="-1" aria-label="Mniej">−</button><input id="amtInput" type="number" min="0" step="1" inputmode="numeric" aria-label="Wartość"><button type="button" data-amt="1" aria-label="Więcej">+</button></div>
+        </div>
       </div>
-      <div class="srow">
-        <span id="amtLabel">Procent dni roboczych</span>
-        <div class="stepper"><button type="button" data-amt="-1" aria-label="Mniej">−</button><input id="amtInput" type="number" min="0" step="1" inputmode="numeric" aria-label="Wartość"><button type="button" data-amt="1" aria-label="Więcej">+</button></div>
+    </section>
+    <details class="opt" id="rulesBox">
+      <summary><span>Konkretne dni tygodnia</span><span class="val" id="rulesVal">Brak</span></summary>
+      <div class="optbody">
+        <p class="note">Tylko jeśli firma wymaga konkretnych dni, np. 1 dzień w pon. lub pt.</p>
+        <div id="ruleSet" class="ruleset"></div>
+        <button type="button" class="btn" id="addRule">+ Dodaj wymóg</button>
       </div>
-    </section>
-    <section>
-      <h3>📌 Konkretne dni tygodnia (opcjonalnie)</h3>
-      <p>Tylko jeśli firma wymaga, np. „1 dzień w poniedziałek lub piątek”. Zaznacz kilka dni, jeśli możesz je dowolnie łączyć.</p>
-      <div id="ruleSet" style="display:flex;flex-direction:column;gap:10px"></div>
-      <button type="button" class="btn" id="addRule" style="align-self:flex-start">+ Dodaj wymóg</button>
-    </section>
-    <section id="installInfo">
-      <h3>📲 Zainstaluj na telefonie</h3>
-      <button type="button" class="btn primary" id="installBtn" style="align-self:flex-start" hidden>📲 Zainstaluj aplikację</button>
-      <ul class="howto" id="howto">
-        <li><b>iPhone (Safari):</b> stuknij <span class="key">Udostępnij</span>, potem <span class="key">Do ekranu początkowego</span>.</li>
-        <li><b>Android (Chrome):</b> stuknij <span class="key">⋮</span>, potem <span class="key">Zainstaluj aplikację</span>.</li>
-      </ul>
-      <p>Aplikacja działa wtedy jak zwykła apka, także bez internetu.</p>
-    </section>
-    <div class="btns" style="justify-content:flex-end"><button class="btn primary" value="close">Gotowe</button></div>
+    </details>
+    <details class="opt" id="installInfo">
+      <summary><span>Zainstaluj na telefonie</span></summary>
+      <div class="optbody">
+        <button type="button" class="btn primary" id="installBtn" hidden>Zainstaluj aplikację</button>
+        <ul class="howto" id="howto">
+          <li><b>iPhone:</b> <span class="key">Udostępnij</span> → <span class="key">Do ekranu początkowego</span></li>
+          <li><b>Android:</b> <span class="key">⋮</span> → <span class="key">Zainstaluj aplikację</span></li>
+        </ul>
+        <p class="note">Działa wtedy jak zwykła apka, także bez internetu.</p>
+      </div>
+    </details>
   </form>
 </dialog>
 <div class="toast" id="toast"></div>
@@ -324,8 +389,8 @@ var LS = 'dniWBiurze.v1';
 var MONTHS = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
 var MONTHS_SHORT = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
 var DOW_SHORT = ['Nd','Pn','Wt','Śr','Cz','Pt','So'];
-var MARK_LABEL = {office:'biuro',vac:'urlop',sick:'L4'};
-var MARK_EMOJI = {office:'🏢',vac:'🌴',sick:'🤒'};
+var MARK_LABEL = {office:'biuro',vac:'urlop'};
+var MARK_EMOJI = {office:'🏢',vac:'🌴'};
 var HOL_SHORT = {'Nowy Rok':'Nowy Rok','Trzech Króli':'Trzech Króli','Święto Pracy':'Święto Pracy','Święto Konstytucji 3 Maja':'3 Maja','Wniebowzięcie NMP':'Wniebo&shy;wzięcie','Wszystkich Świętych':'Wszyst&shy;kich Świętych','Święto Niepodległości':'Niepodle&shy;głości','Wigilia':'Wigilia','Boże Narodzenie':'Boże Narodz.','Drugi dzień świąt':'2. dzień świąt','Wielkanoc':'Wielkanoc','Poniedziałek Wielkanocny':'Pon. Wielka&shy;nocny','Zielone Świątki':'Zielone Świątki','Boże Ciało':'Boże Ciało'};
 
 function defaults(){ return {mode:'pct', percent:40, perMonth:8, perWeek:2, rules:[], tool:'office'}; }
@@ -347,7 +412,12 @@ function normSettings(st){
 function load(){
   try{
     var s = JSON.parse(localStorage.getItem(LS));
-    if(s && typeof s === 'object' && s.days) return {settings:normSettings(s.settings), days:s.days};
+    if(s && typeof s === 'object' && s.days){
+      // L4 was removed as a separate type; earlier L4 days stay as days off (urlop)
+      Object.keys(s.days).forEach(function(k){ if(s.days[k]==='sick') s.days[k] = 'vac'; });
+      if(s.settings && s.settings.tool==='sick') s.settings.tool = 'office';
+      return {settings:normSettings(s.settings), days:s.days};
+    }
   }catch(e){}
   return {settings:defaults(), days:{}};
 }
@@ -385,7 +455,7 @@ function holidays(y){
 
 function stats(y, mo){
   var hol = holidays(y), n = new Date(y, mo+1, 0).getDate(), tk = todayKey();
-  var s = {work:0, hol:0, vac:0, sick:0, office:0, planned:0, avail:0, officeDows:[], availDows:[]};
+  var s = {work:0, hol:0, vac:0, office:0, planned:0, avail:0, officeDows:[], availDows:[]};
   for(var d=1; d<=n; d++){
     var dow = new Date(y, mo, d).getDay(), k = key(y, mo+1, d);
     if(dow===0 || dow===6) continue;
@@ -393,12 +463,11 @@ function stats(y, mo){
     s.work++;
     var m = state.days[k];
     if(m==='vac'){ s.vac++; continue; }
-    if(m==='sick'){ s.sick++; continue; }
     if(m==='office'){ s.office++; if(k > tk) s.planned++; s.officeDows.push(dow); continue; }
     if(k >= tk){ s.avail++; s.availDows.push(dow); }
   }
-  s.pool = s.work - s.vac - s.sick;
-  // base requirement; urlop and L4 reduce it proportionally in every mode
+  s.pool = s.work - s.vac;
+  // base requirement; urlop reduces it proportionally in every mode
   var st = state.settings;
   if(st.mode==='month') s.raw = s.work ? st.perMonth * s.pool / s.work : 0;
   else if(st.mode==='week') s.raw = st.perWeek * s.pool / 5;
@@ -439,6 +508,12 @@ var now = new Date();
 var view ={y:now.getFullYear(), m:now.getMonth()};
 var $ = function(id){ return document.getElementById(id); };
 
+var quiet = false, last = {};
+// restart a CSS animation class on an element
+function replay(el, cls){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+function motionOK(){ return !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+function haptic(){ try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){} }
+
 function render(){
   var y = view.y, mo = view.m, s = stats(y, mo);
   var isNow = (y===now.getFullYear() && mo===now.getMonth());
@@ -449,15 +524,29 @@ function render(){
 
   // the answer: how many office days are done out of how many are required
   var done = s.office - s.planned, ok = done >= s.required;
-  $('big').classList.toggle('done', ok); document.querySelector('.hero').classList.toggle('ok', ok);
+  var hero = document.querySelector('.hero'), mk = y + '-' + mo, same = !quiet && last.mk === mk;
+  $('big').classList.toggle('done', ok); hero.classList.toggle('ok', ok);
   $('heroNum').textContent = done;
+  if(same && last.done !== done) replay($('heroNum'), 'bump');
+  if(same && ok && !last.ok) replay(hero, 'cheer');
+  if(!quiet) last = {mk:mk, done:done, ok:ok};
   $('heroUnit').textContent = 'z ' + s.required + ' ' + pl(s.required,'dnia','dni','dni') + ' w biurze' + (ok ? ' ✓' : '');
   $('cap').hidden = !s.planned;
   if(s.planned) $('cap').innerHTML = '<span class="sw" aria-hidden="true"></span> + ' + s.planned + ' ' + pl(s.planned,'zaplanowany','zaplanowane','zaplanowanych');
   // progress bar: one segment per required day; solid = done, hatched = planned later this month
-  var seg = '';
-  for(var i=0; i<s.required; i++) seg += '<span' + (i<done ? ' class="d"' : i<s.office ? ' class="p"' : '') + '></span>';
-  $('bar').innerHTML = seg; $('bar').hidden = !s.required;
+  // keep the same segments when the count is unchanged, so fills can animate
+  var bar = $('bar');
+  if(bar.children.length !== s.required || !same){
+    var seg = '';
+    for(var i=0; i<s.required; i++) seg += '<span style="--i:' + i + '"></span>';
+    bar.innerHTML = seg;
+  }
+  for(var j=0; j<s.required; j++){
+    var cls = j<done ? 'd' : j<s.office ? 'p' : '', el = bar.children[j], was = el.classList.contains('d');
+    el.className = cls;
+    if(same && cls==='d' && !was) replay(el, 'grow');
+  }
+  bar.hidden = !s.required;
   $('bar').setAttribute('aria-label', done + ' z ' + s.required + (s.planned ? ', ' + s.planned + ' zaplanowane' : ''));
 
   var OR = {1:'Pon',2:'Wt',3:'Śr',4:'Czw',5:'Pt'};
@@ -486,7 +575,6 @@ function render(){
 
   var rows = [['Dni robocze', s.work]];
   if(s.vac) rows.push(['Urlop', '− ' + s.vac]);
-  if(s.sick) rows.push(['L4', '− ' + s.sick]);
   var lbl = st.mode==='month' ? st.perMonth + ' dni × ' + s.pool + '/' + s.work
           : st.mode==='week' ? st.perWeek + ' w tyg. × ' + s.pool + '/5'
           : st.percent + '% z ' + s.pool;
@@ -500,10 +588,10 @@ function render(){
   renderHint();
 }
 
-// first-run tip only; Urlop and L4 work exactly like Biuro, no extra banners
+// first-run tip only; Urlop works exactly like Biuro, no extra banners
 function renderHint(){
   var h = $('hint');
-  h.textContent = '👆 Wybierz Biuro, Urlop albo L4 i stuknij dzień w kalendarzu.';
+  h.textContent = '👆 Wybierz Biuro albo Urlop i stuknij dzień w kalendarzu.';
   h.hidden = Object.keys(state.days).length > 0;
 }
 
@@ -542,6 +630,7 @@ function renderHist(){
 
 function setTool(t){
   state.settings.tool = t; save();
+  document.querySelectorAll('.tools').forEach(function(g){ g.dataset.t = t; });
   document.querySelectorAll('.tool').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.tool===t ? 'true' : 'false'); });
   renderHint();
 }
@@ -549,30 +638,130 @@ function setTool(t){
 $('cal').addEventListener('click', function(e){
   var b = e.target.closest('button[data-k]'); if(!b) return;
   var k = b.dataset.k, t = state.settings.tool;
-  if(state.days[k] === t) delete state.days[k]; else state.days[k] = t;
-  save(); render();
+  var off = state.days[k] === t;
+  if(off) delete state.days[k]; else state.days[k] = t;
+  save(); render(); popDay(k, !off);
 });
+function popDay(k, on){
+  var c = document.querySelector('#cal [data-k="' + k + '"]');
+  if(c) replay(c, on ? 'pop' : 'unpop');
+  if(on) haptic();
+}
 document.querySelectorAll('.tool').forEach(function(b){ b.addEventListener('click', function(){ setTool(b.dataset.tool); }); });
 $('markToday').addEventListener('click', function(){
   var k = todayKey();
   if(state.days[k] === 'office'){ delete state.days[k]; toast('Cofnięto dzisiejszy dzień'); }
   else { state.days[k] = 'office'; toast('🏢 Zapisano: dziś w biurze'); }
-  save(); render();
+  save(); render(); popDay(k, state.days[k] === 'office');
 });
 $('setupBtn').addEventListener('click', function(){ openSettings(); });
-$('prev').addEventListener('click', function(){ view.m--; if(view.m<0){ view.m=11; view.y--; } render(); });
-$('next').addEventListener('click', function(){ view.m++; if(view.m>11){ view.m=0; view.y++; } render(); });
-$('todayBtn').addEventListener('click', function(){ view = {y:now.getFullYear(), m:now.getMonth()}; render(); });
+$('prev').addEventListener('click', function(){ goTo(shiftMonth(view, -1)); });
+$('next').addEventListener('click', function(){ goTo(shiftMonth(view, 1)); });
+$('todayBtn').addEventListener('click', function(){ goTo({y:now.getFullYear(), m:now.getMonth()}); });
 $('hist').addEventListener('click', function(e){
   var b = e.target.closest('[data-ym]'); if(!b) return;
-  view = {y:+b.dataset.ym.slice(0,4), m:+b.dataset.ym.slice(5,7)-1}; render();
   window.scrollTo({top:0, behavior:'smooth'});
+  goTo({y:+b.dataset.ym.slice(0,4), m:+b.dataset.ym.slice(5,7)-1});
 });
 document.addEventListener('visibilitychange', function(){ if(!document.hidden){ now = new Date(); render(); } });
+
+// ---- month paging -------------------------------------------------------------
+// The page follows the finger; the neighbouring months are snapshots placed beside it.
+// Past ~30% of the width, or a quick flick, it settles on the next/previous month,
+// otherwise it springs back. Arrows, "Dziś" and history use the same slide.
+var pager = $('pager'), page = $('page'), pg = null, busy = false;
+function shiftMonth(v, d){ var m = v.m + d; return {y: v.y + Math.floor(m / 12), m: ((m % 12) + 12) % 12}; }
+function cmpView(a, b){ return (a.y - b.y) * 12 + (a.m - b.m); }
+function snapshot(v){
+  var keep = view; quiet = true; view = v; render();
+  var g = page.cloneNode(true);
+  view = keep; render(); quiet = false;
+  g.removeAttribute('id'); g.querySelectorAll('[id]').forEach(function(e){ e.removeAttribute('id'); });
+  g.querySelectorAll('.pop,.unpop,.bump,.grow,.cheer').forEach(function(e){ e.classList.remove('pop','unpop','bump','grow','cheer'); });
+  g.classList.add('ghost'); g.setAttribute('aria-hidden', 'true'); g.inert = true;
+  pager.appendChild(g);
+  return g;
+}
+function gap(){ return parseFloat(getComputedStyle(pager).paddingLeft) || 16; }
+function placePages(dx, ms){
+  var t = ms ? 'transform ' + ms + 'ms var(--ease)' : 'none', W = pg.W;
+  page.style.transition = t; page.style.transform = dx ? 'translate3d(' + dx + 'px,0,0)' : '';
+  [-1, 1].forEach(function(d){ var g = pg.g[d]; if(g){ g.style.transition = t; g.style.transform = 'translate3d(' + (dx + d * W) + 'px,0,0)'; } });
+}
+function openPaging(views){
+  pg = {g:{}, v:views, W: page.offsetWidth + 2 * gap()};
+  [-1, 1].forEach(function(d){ if(views[d]) pg.g[d] = snapshot(views[d]); });
+  placePages(0, 0);
+}
+function settle(dir, ms){
+  busy = true;
+  var target = dir ? pg.v[dir] : null;
+  placePages(-dir * pg.W, ms);
+  var fin = function(){
+    page.removeEventListener('transitionend', onEnd); clearTimeout(tm);
+    if(target){ view = target; quiet = true; render(); quiet = false; last = {}; }
+    [-1, 1].forEach(function(d){ if(pg.g[d]) pg.g[d].remove(); });
+    page.style.transition = 'none'; page.style.transform = '';
+    pg = null; busy = false;
+  };
+  var onEnd = function(e){ if(e.target === page) fin(); };
+  var tm = setTimeout(fin, ms + 80);
+  page.addEventListener('transitionend', onEnd);
+}
+function goTo(v){
+  var dir = cmpView(v, view) > 0 ? 1 : -1;
+  if(!cmpView(v, view) || busy) return;
+  if(!motionOK()){ view = v; render(); return; }
+  var views = {}; views[dir] = v;
+  openPaging(views);
+  void page.offsetWidth;
+  settle(dir, 380);
+}
+var drag = null, eatClick = false;
+pager.addEventListener('pointerdown', function(e){
+  if(e.pointerType === 'mouse' || busy || !e.isPrimary) return;
+  drag = {id:e.pointerId, x:e.clientX, y:e.clientY, axis:null, pts:[]};
+});
+pager.addEventListener('pointermove', function(e){
+  if(!drag || e.pointerId !== drag.id) return;
+  var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if(!drag.axis){
+    if(Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+    drag.axis = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y';
+    if(drag.axis === 'y'){ drag = null; return; }
+    try{ pager.setPointerCapture(e.pointerId); }catch(err){}
+    drag.x = e.clientX; dx = 0;
+    openPaging({'-1': shiftMonth(view, -1), '1': shiftMonth(view, 1)});
+  }
+  drag.pts.push([e.timeStamp, dx]); if(drag.pts.length > 6) drag.pts.shift();
+  placePages(dx, 0);
+});
+function endDrag(e){
+  if(!drag || e.pointerId !== drag.id) return;
+  var d = drag; drag = null;
+  if(d.axis !== 'x' || !pg) return;
+  eatClick = true; setTimeout(function(){ eatClick = false; }, 350);
+  var p = d.pts, dx = p.length ? p[p.length - 1][1] : 0, v = 0;
+  if(p.length > 1){ var a = p[0], b = p[p.length - 1]; v = (b[1] - a[1]) / Math.max(1, b[0] - a[0]); }
+  var dir = 0;
+  if(e.type !== 'pointercancel'){
+    if(dx < -pg.W * 0.3 || (v < -0.35 && dx < 0)) dir = 1;
+    else if(dx > pg.W * 0.3 || (v > 0.35 && dx > 0)) dir = -1;
+  }
+  var rest = Math.abs((dir ? -dir * pg.W : 0) - dx);
+  settle(dir, Math.round(Math.max(220, Math.min(420, rest / pg.W * 520))));
+}
+pager.addEventListener('pointerup', endDrag);
+pager.addEventListener('pointercancel', endDrag);
+// a swipe must never also count as a tap on a day or button
+pager.addEventListener('click', function(e){ if(eatClick){ e.stopPropagation(); e.preventDefault(); } }, true);
 
 // settings
 var dlg = $('dlg');
 function renderRuleSet(){
+  // collapsed row shows the current state, e.g. "1× Pn/Pt"
+  var act = activeRules();
+  $('rulesVal').textContent = act.length ? act.map(function(r){ return r.n + '× ' + daysLabel(r.d); }).join(', ') : 'Brak';
   $('ruleSet').innerHTML = state.settings.rules.map(function(r, i){
     var days = '';
     for(var w=1; w<=5; w++) days += '<button type="button" data-i="' + i + '" data-day="' + w + '" aria-pressed="' + (r.d.indexOf(w)>=0) + '">' + DOW_SHORT[w] + '</button>';
@@ -584,11 +773,22 @@ function renderRuleSet(){
 $('addRule').addEventListener('click', function(){ state.settings.rules.push({n:1, d:[1]}); save(); renderRuleSet(); render(); });
 function openSettings(){
   renderAmount(); renderRuleSet();
+  $('settingsBtn').classList.add('spin');
   if(dlg.showModal) dlg.showModal(); else dlg.setAttribute('open','');
 }
+function closeSettings(){
+  if(!dlg.open || dlg.classList.contains('closing')) return;
+  if(!motionOK()){ dlg.close(); return; }
+  dlg.classList.add('closing');
+  var fin = function(){ dlg.removeEventListener('animationend', fin); clearTimeout(tm); dlg.classList.remove('closing'); dlg.close(); };
+  var tm = setTimeout(fin, 320);
+  dlg.addEventListener('animationend', fin);
+}
 $('settingsBtn').addEventListener('click', openSettings);
-dlg.addEventListener('close', render);
-dlg.addEventListener('click', function(e){ if(e.target === dlg) dlg.close(); });
+dlg.addEventListener('close', function(){ $('settingsBtn').classList.remove('spin'); render(); });
+dlg.addEventListener('click', function(e){ if(e.target === dlg) closeSettings(); });
+dlg.addEventListener('cancel', function(e){ e.preventDefault(); closeSettings(); });
+dlg.querySelector('form').addEventListener('submit', function(e){ e.preventDefault(); closeSettings(); });
 var MODE = {
   pct:   {field:'percent',  label:'Procent dni roboczych', max:100, step:5},
   month: {field:'perMonth', label:'Dni w miesiącu',        max:23,  step:1},
@@ -596,6 +796,7 @@ var MODE = {
 };
 function renderAmount(){
   var m = MODE[state.settings.mode];
+  document.querySelector('.modes').dataset.m = state.settings.mode;
   document.querySelectorAll('[data-mode]').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.mode===state.settings.mode ? 'true' : 'false'); });
   $('amtLabel').textContent = m.label;
   $('amtInput').max = m.max;
@@ -631,12 +832,26 @@ $('installBtn').addEventListener('click', function(){
 });
 window.addEventListener('appinstalled', function(){ $('installInfo').hidden = true; });
 if('serviceWorker' in navigator && location.protocol === 'https:'){
-  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+  // Installed apps are often only resumed, not reopened, so nothing would ever check for
+  // a new version. Check on start and every time the app comes back to the foreground;
+  // when a new version takes over, reload once so the new page is shown.
+  var hadController = !!navigator.serviceWorker.controller, reloading = false;
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      document.addEventListener('visibilitychange', function(){ if(!document.hidden) reg.update().catch(function(){}); });
+    }).catch(function(){});
+  });
+  navigator.serviceWorker.addEventListener('controllerchange', function(){
+    // the first takeover (fresh install) is not an update; any later one is
+    if(!hadController){ hadController = true; return; }
+    if(reloading) return;
+    reloading = true; location.reload();
+  });
 }
 
 // hide install tips when already running as an installed app
 try{ if((window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone) $('installInfo').hidden = true; }catch(e){}
-// always start on "Biuro": a leftover Urlop/L4 tool from last time would silently mislabel today's tap
+// always start on "Biuro": a leftover Urlop tool from last time would silently mislabel today's tap
 setTool('office');
 render();
 window.__biuro = {stats:stats, state:function(){ return state; }};
