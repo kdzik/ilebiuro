@@ -799,8 +799,10 @@ swipe.addEventListener('touchmove', function(e){
   if(!drag) return;
   var t = e.touches[0], dx = t.clientX - drag.x, dy = t.clientY - drag.y;
   if(!drag.axis){
-    if(Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-    drag.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+    // sideways up to ~53° off horizontal counts as a month swipe, so diagonal swipes work;
+    // ordinary scrolling (much closer to vertical) still scrolls
+    drag.axis = Math.abs(dx) > Math.abs(dy) * 0.75 ? 'x' : 'y';
     if(drag.axis === 'y'){ drag = null; return; }
     drag.x = t.clientX; dx = 0;
     openPaging({'-1': shiftMonth(view, -1), '1': shiftMonth(view, 1)});
@@ -823,10 +825,12 @@ function endDrag(e){
   v = Math.max(-4, Math.min(4, v));
   placePages(dx);
   // where would the page come to rest with this momentum? past half a page -> switch
-  var dir = 0, proj = dx + v * 400;
+  // more sensitive: a resting point past 30% of the width, or any short quick flick, switches.
+  // Still at most one month per gesture: the destination is always a direct neighbour.
+  var dir = 0, proj = dx + v * 450;
   if(e.type !== 'touchcancel'){
-    if(proj < -pg.W * 0.4) dir = 1;
-    else if(proj > pg.W * 0.4) dir = -1;
+    if(proj < -pg.W * 0.3 || (v < -0.2 && dx < -20)) dir = 1;
+    else if(proj > pg.W * 0.3 || (v > 0.2 && dx > 20)) dir = -1;
   }
   settle(dir, v);
 }
