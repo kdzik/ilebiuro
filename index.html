@@ -113,10 +113,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .bar{width:100%;max-width:320px;height:8px;display:flex;gap:4px}
 .bar span{flex:1;border-radius:4px;background:var(--panel);transition:background-color .35s var(--ease)}
 .bar .d{background:var(--oxide)}
-.bar .p{background:repeating-linear-gradient(135deg,var(--oxide) 0 2px,var(--card) 2px 5px)}
 .hero.ok .bar .d{background:var(--ok)}
-.cap{margin:0;font-size:15px;font-weight:500;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
-.cap .sw{display:inline-block;width:12px;height:12px;border-radius:2px;border:1.5px solid var(--oxide);vertical-align:-1px;background:repeating-linear-gradient(135deg,var(--oxide) 0 2px,transparent 2px 5px)}
 .markday{min-height:50px;padding:0 22px;border:0;border-radius:12px;background:var(--oxide);color:var(--on-oxide);font-weight:700;font-size:16px;cursor:pointer}
 .markday:hover{filter:brightness(1.08)}
 .markday[aria-pressed="true"]{background:var(--oxide-soft);color:var(--oxide)}
@@ -335,7 +332,6 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
   <div class="grid">
     <section class="hero" aria-live="polite">
       <p class="big" id="big"><span class="num" id="heroNum">0</span> <span class="unit" id="heroUnit">z 0 dni w biurze</span></p>
-      <p class="cap" id="cap" hidden></p>
       <div class="prog">
         <div class="bar" id="bar" role="img"></div>
       </div>
@@ -477,7 +473,7 @@ function holidays(y){
 
 function stats(y, mo){
   var hol = holidays(y), n = new Date(y, mo+1, 0).getDate(), tk = todayKey();
-  var s = {work:0, hol:0, vac:0, office:0, planned:0, avail:0, officeDows:[], availDows:[]};
+  var s = {work:0, hol:0, vac:0, office:0, avail:0, officeDows:[], availDows:[]};
   for(var d=1; d<=n; d++){
     var dow = new Date(y, mo, d).getDay(), k = key(y, mo+1, d);
     if(dow===0 || dow===6) continue;
@@ -485,7 +481,7 @@ function stats(y, mo){
     s.work++;
     var m = state.days[k];
     if(m==='vac'){ s.vac++; continue; }
-    if(m==='office'){ s.office++; if(k > tk) s.planned++; s.officeDows.push(dow); continue; }
+    if(m==='office'){ s.office++; s.officeDows.push(dow); continue; }
     if(k >= tk){ s.avail++; s.availDows.push(dow); }
   }
   s.pool = s.work - s.vac;
@@ -557,7 +553,7 @@ function render(){
   if(root === document) setHeader(view);
 
   // the answer: how many office days are done out of how many are required
-  var done = s.office - s.planned, ok = done >= s.required;
+  var done = s.office, ok = done >= s.required;
   var hero = root.querySelector('.hero'), mk = y + '-' + mo, same = !quiet && last.mk === mk;
   $('big').classList.toggle('done', ok); hero.classList.toggle('ok', ok);
   $('heroNum').textContent = done;
@@ -565,9 +561,7 @@ function render(){
   if(same && ok && !last.ok) replay(hero, 'cheer');
   if(!quiet) last = {mk:mk, done:done, ok:ok};
   $('heroUnit').textContent = 'z ' + s.required + ' ' + pl(s.required,'dnia','dni','dni') + ' w biurze' + (ok ? ' ✓' : '');
-  $('cap').hidden = !s.planned;
-  if(s.planned) $('cap').innerHTML = '<span class="sw" aria-hidden="true"></span> + ' + s.planned + ' ' + pl(s.planned,'zaplanowany','zaplanowane','zaplanowanych');
-  // progress bar: one segment per required day; solid = done, hatched = planned later this month
+  // progress bar: one segment per required day; solid = done
   // keep the same segments when the count is unchanged, so fills can animate
   var bar = $('bar');
   if(bar.children.length !== s.required || !same){
@@ -576,12 +570,12 @@ function render(){
     bar.innerHTML = seg;
   }
   for(var j=0; j<s.required; j++){
-    var cls = j<done ? 'd' : j<s.office ? 'p' : '', el = bar.children[j], was = el.classList.contains('d');
+    var cls = j<done ? 'd' : '', el = bar.children[j], was = el.classList.contains('d');
     el.className = cls;
     if(same && cls==='d' && !was) replay(el, 'grow');
   }
   bar.hidden = !s.required;
-  $('bar').setAttribute('aria-label', done + ' z ' + s.required + (s.planned ? ', ' + s.planned + ' zaplanowane' : ''));
+  $('bar').setAttribute('aria-label', done + ' z ' + s.required);
 
   var OR = {1:'Pon',2:'Wt',3:'Śr',4:'Czw',5:'Pt'};
 
