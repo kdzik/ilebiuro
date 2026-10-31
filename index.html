@@ -297,6 +297,8 @@ dialog.closing{animation:shrinkOut .2s cubic-bezier(.4,0,.8,.6) forwards}
 dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
 .icon-btn svg{transition:transform .6s var(--ease)}
 .icon-btn.spin svg{transform:rotate(120deg)}
+@keyframes swapIn{from{opacity:.25}to{opacity:1}}
+.mhead.swap{animation:swapIn .2s ease}
 .todaybtn:not(.off){animation:reveal .3s var(--ease)}
 @keyframes tileIn{from{opacity:.35}to{opacity:1}}
 /* Reduce Motion: no slides, zooms or bounces; keep short dissolves and the segmented thumb,
@@ -539,16 +541,22 @@ function replay(el, cls){ el.classList.remove(cls); void el.offsetWidth; el.clas
 function motionOK(){ return !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
 function haptic(){ try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){} }
 
+// month bar: title, year, "Dziś"; switched as soon as a swipe knows where it is going
+function setHeader(v){
+  var st = state.settings, isNow = v.y===now.getFullYear() && v.m===now.getMonth();
+  $('pctLabel').textContent = st.mode==='month' ? st.perMonth + '/mies.' : st.mode==='week' ? st.perWeek + '/tydz.' : st.percent + '%';
+  var changed = $('monthTitle').textContent !== MONTHS[v.m] || $('monthYear').textContent !== String(v.y);
+  $('monthTitle').textContent = MONTHS[v.m]; $('monthYear').textContent = v.y;
+  $('todayBtn').classList.toggle('off', isNow); $('todayBtn').tabIndex = isNow ? -1 : 0;
+  if(changed && motionOK()) replay(document.querySelector('.mhead'), 'swap');
+}
+
 function render(){
   var y = view.y, mo = view.m, s = stats(y, mo);
   var isNow = (y===now.getFullYear() && mo===now.getMonth());
   var st = state.settings;
   // the month bar stays put while pages slide; it only changes for the live page
-  if(root === document){
-    $('pctLabel').textContent = st.mode==='month' ? st.perMonth + '/mies.' : st.mode==='week' ? st.perWeek + '/tydz.' : st.percent + '%';
-    $('monthTitle').textContent = MONTHS[mo]; $('monthYear').textContent = y;
-    $('todayBtn').classList.toggle('off', isNow); $('todayBtn').tabIndex = isNow ? -1 : 0;
-  }
+  if(root === document) setHeader(view);
 
   // the answer: how many office days are done out of how many are required
   var done = s.office - s.planned, ok = done >= s.required;
@@ -726,17 +734,18 @@ function openPaging(views){
 }
 // Critically damped spring, like iOS scroll views: it starts with the finger's own
 // velocity (px/ms) and eases into place without a jump or an overshoot.
-var SPRING = 0.021;   // natural frequency, 1/ms; about 0.4 s to settle
+var SPRING = 0.026;   // natural frequency, 1/ms; about 0.3 s to settle
 function settle(dir, v0){
   busy = true;
   var target = dir ? pg.v[dir] : null, to = -dir * pg.W;
+  setHeader(target || view);   // the bar shows the destination right away, not after the glide
   var x0 = pg.x - to, v = v0 || 0, w = SPRING, t0 = null;
   function step(now){
     if(t0 === null) t0 = now;
     var t = now - t0, e = Math.exp(-w * t);
     var x = (x0 + (v + w * x0) * t) * e;               // offset from the target
     var vel = (v - (v + w * x0) * w * t) * e;          // its velocity
-    if(Math.abs(x) < 0.4 && Math.abs(vel) < 0.02){ placePages(to); return fin(); }
+    if(Math.abs(x) < 1 && Math.abs(vel) < 0.05){ placePages(to); return fin(); }
     placePages(to + x);
     pg.raf = requestAnimationFrame(step);
   }
