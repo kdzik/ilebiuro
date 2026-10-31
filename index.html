@@ -68,7 +68,8 @@ button.c:active{transform:scale(.92)}
 .wrap{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 /* month pages: the current page follows the finger, neighbours are snapshots beside it */
 .pager{position:relative;margin-inline:calc(-1 * var(--gut));padding-inline:var(--gut);overflow-x:hidden;overflow-x:clip}
-.page{display:flex;flex-direction:column;gap:16px;will-change:transform}
+.swipe{display:flex;flex-direction:column;gap:16px}
+.page{will-change:transform}
 .page.nofx,.page.nofx *{animation:none!important;transition:none!important}
 .page.ghost{position:absolute;top:0;left:var(--gut);right:var(--gut);pointer-events:none;contain:layout paint}
 
@@ -253,7 +254,7 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 @media (max-width:420px){
   /* phone: keep the answer and the calendar's busy rows on the first screen */
-  .wrap,.page{gap:12px}
+  .wrap,.swipe{gap:12px}
   header{padding-top:0}
   .hero{padding:12px 14px;gap:8px}
   .markday{min-height:46px}
@@ -318,7 +319,7 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
     <h1 class="sign">Dni w biurze</h1>
   </header>
 
-  <div class="pager" id="pager"><div class="page" id="page">
+  <div class="swipe" id="swipe">
   <div class="monthbar">
     <div class="mbl"><button class="todaybtn" id="todayBtn" type="button" aria-label="Wróć do bieżącego miesiąca" title="Wróć do bieżącego miesiąca">Dziś</button></div>
     <div class="mnav">
@@ -331,6 +332,7 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
     </div>
   </div>
 
+  <div class="pager" id="pager"><div class="page" id="page">
   <div class="grid">
     <section class="hero" aria-live="polite">
       <p class="big" id="big"><span class="num" id="heroNum">0</span> <span class="unit" id="heroUnit">z 0 dni w biurze</span></p>
@@ -360,6 +362,7 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
     </section>
   </div>
   </div></div>
+  </div>
 </div>
 
 <dialog id="dlg">
@@ -540,9 +543,12 @@ function render(){
   var y = view.y, mo = view.m, s = stats(y, mo);
   var isNow = (y===now.getFullYear() && mo===now.getMonth());
   var st = state.settings;
-  $('pctLabel').textContent = st.mode==='month' ? st.perMonth + '/mies.' : st.mode==='week' ? st.perWeek + '/tydz.' : st.percent + '%';
-  $('monthTitle').textContent = MONTHS[mo]; $('monthYear').textContent = y;
-  $('todayBtn').classList.toggle('off', isNow); $('todayBtn').tabIndex = isNow ? -1 : 0;
+  // the month bar stays put while pages slide; it only changes for the live page
+  if(root === document){
+    $('pctLabel').textContent = st.mode==='month' ? st.perMonth + '/mies.' : st.mode==='week' ? st.perWeek + '/tydz.' : st.percent + '%';
+    $('monthTitle').textContent = MONTHS[mo]; $('monthYear').textContent = y;
+    $('todayBtn').classList.toggle('off', isNow); $('todayBtn').tabIndex = isNow ? -1 : 0;
+  }
 
   // the answer: how many office days are done out of how many are required
   var done = s.office - s.planned, ok = done >= s.required;
@@ -691,7 +697,7 @@ document.addEventListener('visibilitychange', function(){ if(!document.hidden){ 
 // The page follows the finger; the neighbouring months are snapshots placed beside it.
 // Past ~30% of the width, or a quick flick, it settles on the next/previous month,
 // otherwise it springs back. Arrows, "Dziś" and history use the same slide.
-var pager = $('pager'), page = $('page'), pg = null, busy = false;
+var pager = $('pager'), page = $('page'), swipe = $('swipe'), pg = null, busy = false;
 function shiftMonth(v, d){ var m = v.m + d; return {y: v.y + Math.floor(m / 12), m: ((m % 12) + 12) % 12}; }
 function cmpView(a, b){ return (a.y - b.y) * 12 + (a.m - b.m); }
 // Draw a month into a copy of the page without touching the live one: replacing live
@@ -713,6 +719,7 @@ function placePages(dx){
   [-1, 1].forEach(function(d){ var g = pg.g[d]; if(g){ g.style.transition = 'none'; g.style.transform = 'translate3d(' + (dx + d * pg.W) + 'px,0,0)'; } });
 }
 function openPaging(views){
+  if(pg){ if(pg.raf) cancelAnimationFrame(pg.raf); closePaging(); }   // never stack a second set of pages
   pg = {g:{}, v:views, W: page.offsetWidth + 2 * gap(), x:0};
   [-1, 1].forEach(function(d){ if(views[d]) pg.g[d] = snapshot(views[d]); });
   placePages(0);
@@ -748,7 +755,7 @@ function settle(dir, v0){
 }
 function goTo(v){
   var dir = cmpView(v, view) > 0 ? 1 : -1;
-  if(!cmpView(v, view) || busy) return;
+  if(!cmpView(v, view) || busy || drag || eatClick) return;   // never on top of a swipe
   if(!motionOK()){ view = v; render(); return; }
   var views = {}; views[dir] = v;
   openPaging(views);
@@ -764,8 +771,11 @@ function closePaging(){
 // pan and cancels pointer drags. Here we decide the axis ourselves and, once the gesture
 // is horizontal, stop the browser with preventDefault so the page tracks the finger.
 var drag = null, eatClick = false, raf = 0;
-pager.addEventListener('touchstart', function(e){
-  if(e.touches.length !== 1){ drag = null; return; }
+swipe.addEventListener('touchstart', function(e){
+  if(e.touches.length !== 1){
+    if(drag && pg && !busy){ drag = null; settle(0, 0); }
+    drag = null; return;
+  }
   var t = e.touches[0];
   // catch a page that is still gliding and keep dragging it from where it is
   if(busy && pg && pg.raf){
@@ -776,7 +786,7 @@ pager.addEventListener('touchstart', function(e){
   if(busy){ drag = null; return; }
   drag = {x:t.clientX, y:t.clientY, axis:null, dx:0, pts:[]};
 }, {passive:true});
-pager.addEventListener('touchmove', function(e){
+swipe.addEventListener('touchmove', function(e){
   if(!drag) return;
   var t = e.touches[0], dx = t.clientX - drag.x, dy = t.clientY - drag.y;
   if(!drag.axis){
@@ -796,7 +806,8 @@ function endDrag(e){
   var d = drag; drag = null;
   if(raf){ cancelAnimationFrame(raf); raf = 0; }
   if(d.axis !== 'x' || !pg) return;
-  eatClick = true; setTimeout(function(){ eatClick = false; }, 400);
+  if(e.cancelable) e.preventDefault();          // no synthetic click on an arrow or "Dziś"
+  eatClick = true; setTimeout(function(){ eatClick = false; }, 450);
   // release velocity from the last ~100 ms of movement
   var p = d.pts, dx = d.dx, v = 0, lp = p[p.length - 1];
   for(var i = 0; i < p.length; i++){ if(lp && lp[0] - p[i][0] <= 100){ v = (lp[1] - p[i][1]) / Math.max(1, lp[0] - p[i][0]); break; } }
@@ -810,10 +821,10 @@ function endDrag(e){
   }
   settle(dir, v);
 }
-pager.addEventListener('touchend', endDrag);
-pager.addEventListener('touchcancel', endDrag);
+swipe.addEventListener('touchend', endDrag, {passive:false});
+swipe.addEventListener('touchcancel', endDrag);
 // a swipe must never also count as a tap on a day or button
-pager.addEventListener('click', function(e){ if(eatClick){ e.stopPropagation(); e.preventDefault(); } }, true);
+swipe.addEventListener('click', function(e){ if(eatClick){ e.stopPropagation(); e.preventDefault(); } }, true);
 
 // settings
 var dlg = $('dlg');
