@@ -59,16 +59,16 @@ body{
 }
 button{font:inherit;color:inherit}
 /* press feedback: things shrink a touch under the finger, like iOS controls */
-.markday,.tool,.nav,.icon-btn,.todaybtn,.btn,.hrow,.chip,.done,.stepper button,.daypick button{transition:transform .15s var(--ease),background-color .2s,color .2s}
-.markday:active,.tool:active,.nav:active,.icon-btn:active,.todaybtn:active,.btn:active,.done:active,.stepper button:active,.daypick button:active{transform:scale(.95)}
+.markday,.tool,.nav,.icon-btn,.todaybtn,.btn,.hrow,.chip,.xclose,.stepper button,.daypick button{transition:transform .15s var(--ease),background-color .2s,color .2s}
+.markday:active,.tool:active,.nav:active,.icon-btn:active,.todaybtn:active,.btn:active,.xclose:active,.stepper button:active,.daypick button:active{transform:scale(.95)}
 button.c{transition:transform .15s var(--ease)}
 button.c:active{transform:scale(.92)}
 :focus-visible{outline:2px solid var(--oxide);outline-offset:2px}
 .wrap{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 /* month pages: the current page follows the finger, neighbours are snapshots beside it */
-.pager{position:relative;margin-inline:calc(-1 * var(--gut));padding-inline:var(--gut);overflow-x:hidden;overflow-x:clip;touch-action:pan-y pinch-zoom}
+.pager{position:relative;margin-inline:calc(-1 * var(--gut));padding-inline:var(--gut);overflow-x:hidden;overflow-x:clip}
 .page{display:flex;flex-direction:column;gap:16px;will-change:transform}
-.page.ghost{position:absolute;top:0;left:var(--gut);right:var(--gut);pointer-events:none}
+.page.ghost{position:absolute;top:0;left:var(--gut);right:var(--gut);pointer-events:none;contain:layout paint}
 
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:6px}
 .sign{font-weight:700;font-size:17px;color:var(--oxide);margin:0;line-height:1}
@@ -194,8 +194,8 @@ dialog::backdrop{background:rgba(14,12,11,.78);-webkit-backdrop-filter:blur(6px)
 .dlg{padding:14px 16px 18px;display:flex;flex-direction:column;gap:14px}
 .dlg-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .dlg h2{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em}
-.done{flex:none;width:32px;height:32px;margin-right:-2px;border:0;border-radius:50%;background:rgba(118,118,128,.12);color:var(--muted);display:grid;place-items:center;cursor:pointer}
-.done svg{width:16px;height:16px}
+.xclose{flex:none;width:44px;height:44px;margin:-6px -12px -6px 0;border:0;background:none;color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.xclose svg{width:20px;height:20px}
 .dlg section{display:flex;flex-direction:column;gap:6px}
 .dlg h3{margin:0 4px;font-size:13px;font-weight:600;color:var(--muted)}
 .dlg p{margin:0}
@@ -255,7 +255,7 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
   .monthbar h2{font-size:clamp(22px,7.4vw,30px);letter-spacing:0}
   /* phone: the app name is already on the home screen icon; give its row to the calendar */
   header{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
-  #pctLabel{display:none}
+  .pct{display:none}
   .monthbar .icon-btn{width:40px;padding:0;justify-content:center}
   .monthbar{gap:4px}
   .mnav{gap:2px}
@@ -307,7 +307,7 @@ dialog.closing::backdrop{animation:fadeOut .22s ease-in forwards}
       <button class="nav" id="next" aria-label="Następny miesiąc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
     </div>
     <div class="mbr">
-      <button class="icon-btn" id="settingsBtn" aria-label="Ustawienia"><span id="pctLabel">40%</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+      <button class="icon-btn" id="settingsBtn" aria-label="Ustawienia"><span class="pct" id="pctLabel">40%</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
     </div>
   </div>
 
@@ -344,7 +344,7 @@ dialog.closing::backdrop{animation:fadeOut .22s ease-in forwards}
 
 <dialog id="dlg">
   <form method="dialog" class="dlg">
-    <div class="dlg-head"><h2>Ustawienia</h2><button class="done" value="close" aria-label="Zamknij"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="dlg-head"><h2>Ustawienia</h2><button class="xclose" value="close" aria-label="Zamknij"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <section>
       <h3>Ile musisz być w biurze</h3>
       <div class="group">
@@ -506,7 +506,9 @@ function ruleSentence(r){
 
 var now = new Date();
 var view ={y:now.getFullYear(), m:now.getMonth()};
-var $ = function(id){ return document.getElementById(id); };
+// render() writes through $(); for month snapshots it is pointed at an off-screen copy
+var root = document;
+var $ = function(id){ return root === document ? document.getElementById(id) : root.querySelector('#' + id); };
 
 var quiet = false, last = {};
 // restart a CSS animation class on an element
@@ -524,7 +526,7 @@ function render(){
 
   // the answer: how many office days are done out of how many are required
   var done = s.office - s.planned, ok = done >= s.required;
-  var hero = document.querySelector('.hero'), mk = y + '-' + mo, same = !quiet && last.mk === mk;
+  var hero = root.querySelector('.hero'), mk = y + '-' + mo, same = !quiet && last.mk === mk;
   $('big').classList.toggle('done', ok); hero.classList.toggle('ok', ok);
   $('heroNum').textContent = done;
   if(same && last.done !== done) replay($('heroNum'), 'bump');
@@ -672,10 +674,12 @@ document.addEventListener('visibilitychange', function(){ if(!document.hidden){ 
 var pager = $('pager'), page = $('page'), pg = null, busy = false;
 function shiftMonth(v, d){ var m = v.m + d; return {y: v.y + Math.floor(m / 12), m: ((m % 12) + 12) % 12}; }
 function cmpView(a, b){ return (a.y - b.y) * 12 + (a.m - b.m); }
+// Draw a month into a copy of the page without touching the live one: replacing live
+// elements would detach the element under the finger and the browser drops the gesture.
 function snapshot(v){
-  var keep = view; quiet = true; view = v; render();
-  var g = page.cloneNode(true);
-  view = keep; render(); quiet = false;
+  var g = page.cloneNode(true), keep = view;
+  root = g; quiet = true; view = v;
+  try{ render(); } finally { root = document; view = keep; quiet = false; }
   g.removeAttribute('id'); g.querySelectorAll('[id]').forEach(function(e){ e.removeAttribute('id'); });
   g.querySelectorAll('.pop,.unpop,.bump,.grow,.cheer').forEach(function(e){ e.classList.remove('pop','unpop','bump','grow','cheer'); });
   g.classList.add('ghost'); g.setAttribute('aria-hidden', 'true'); g.inert = true;
@@ -717,42 +721,55 @@ function goTo(v){
   void page.offsetWidth;
   settle(dir, 380);
 }
-var drag = null, eatClick = false;
-pager.addEventListener('pointerdown', function(e){
-  if(e.pointerType === 'mouse' || busy || !e.isPrimary) return;
-  drag = {id:e.pointerId, x:e.clientX, y:e.clientY, axis:null, pts:[]};
-});
-pager.addEventListener('pointermove', function(e){
-  if(!drag || e.pointerId !== drag.id) return;
-  var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+function closePaging(){
+  if(!pg) return;
+  [-1, 1].forEach(function(d){ if(pg.g[d]) pg.g[d].remove(); });
+  page.style.transition = 'none'; page.style.transform = '';
+  pg = null;
+}
+// Touch events, not pointer events: iOS Safari ignores touch-action: pan-y, starts its own
+// pan and cancels pointer drags. Here we decide the axis ourselves and, once the gesture
+// is horizontal, stop the browser with preventDefault so the page tracks the finger.
+var drag = null, eatClick = false, raf = 0;
+pager.addEventListener('touchstart', function(e){
+  if(busy || e.touches.length !== 1){ drag = null; return; }
+  var t = e.touches[0];
+  drag = {x:t.clientX, y:t.clientY, axis:null, dx:0, pts:[]};
+}, {passive:true});
+pager.addEventListener('touchmove', function(e){
+  if(!drag) return;
+  var t = e.touches[0], dx = t.clientX - drag.x, dy = t.clientY - drag.y;
   if(!drag.axis){
-    if(Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
-    drag.axis = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y';
+    if(Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+    drag.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
     if(drag.axis === 'y'){ drag = null; return; }
-    try{ pager.setPointerCapture(e.pointerId); }catch(err){}
-    drag.x = e.clientX; dx = 0;
+    drag.x = t.clientX; dx = 0;
     openPaging({'-1': shiftMonth(view, -1), '1': shiftMonth(view, 1)});
   }
+  e.preventDefault();
+  drag.dx = dx;
   drag.pts.push([e.timeStamp, dx]); if(drag.pts.length > 6) drag.pts.shift();
-  placePages(dx, 0);
-});
+  if(!raf) raf = requestAnimationFrame(function(){ raf = 0; if(drag && pg) placePages(drag.dx, 0); });
+}, {passive:false});
 function endDrag(e){
-  if(!drag || e.pointerId !== drag.id) return;
+  if(!drag) return;
   var d = drag; drag = null;
+  if(raf){ cancelAnimationFrame(raf); raf = 0; }
   if(d.axis !== 'x' || !pg) return;
-  eatClick = true; setTimeout(function(){ eatClick = false; }, 350);
-  var p = d.pts, dx = p.length ? p[p.length - 1][1] : 0, v = 0;
+  eatClick = true; setTimeout(function(){ eatClick = false; }, 400);
+  var p = d.pts, dx = d.dx, v = 0;
   if(p.length > 1){ var a = p[0], b = p[p.length - 1]; v = (b[1] - a[1]) / Math.max(1, b[0] - a[0]); }
   var dir = 0;
-  if(e.type !== 'pointercancel'){
-    if(dx < -pg.W * 0.3 || (v < -0.35 && dx < 0)) dir = 1;
-    else if(dx > pg.W * 0.3 || (v > 0.35 && dx > 0)) dir = -1;
+  if(e.type !== 'touchcancel'){
+    if(dx < -pg.W * 0.3 || (v < -0.3 && dx < -10)) dir = 1;
+    else if(dx > pg.W * 0.3 || (v > 0.3 && dx > 10)) dir = -1;
   }
+  placePages(dx, 0);
   var rest = Math.abs((dir ? -dir * pg.W : 0) - dx);
-  settle(dir, Math.round(Math.max(220, Math.min(420, rest / pg.W * 520))));
+  settle(dir, Math.round(Math.max(200, Math.min(380, rest / pg.W * 460))));
 }
-pager.addEventListener('pointerup', endDrag);
-pager.addEventListener('pointercancel', endDrag);
+pager.addEventListener('touchend', endDrag);
+pager.addEventListener('touchcancel', endDrag);
 // a swipe must never also count as a tap on a day or button
 pager.addEventListener('click', function(e){ if(eatClick){ e.stopPropagation(); e.preventDefault(); } }, true);
 
