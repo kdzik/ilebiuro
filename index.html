@@ -98,13 +98,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .bar span{flex:1;border-radius:3px;background:var(--card);border:1.5px solid var(--frame)}
 .bar .d{background:var(--oxide);border-color:var(--oxide)}
 .bar .p{background:repeating-linear-gradient(135deg,var(--oxide) 0 2px,var(--card) 2px 5px);border-color:var(--oxide)}
-.big.done ~ .prog .bar .d{background:var(--ok);border-color:var(--ok)}
-.cap{margin:0;font-size:15px;font-weight:600;text-align:center;font-variant-numeric:tabular-nums}
-.capd{width:100%}
-.capd summary.cap{color:var(--ink)}
-.capd summary.cap::before{content:none}
-.cap .why{font-size:13.5px;font-weight:600;color:var(--oxide);text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
-.cap .pl{font-weight:500;color:var(--muted)}
+.hero.ok .bar .d{background:var(--ok);border-color:var(--ok)}
+.cap{margin:0;font-size:15px;font-weight:500;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
 .cap .sw{display:inline-block;width:12px;height:12px;border-radius:2px;border:1.5px solid var(--oxide);vertical-align:-1px;background:repeating-linear-gradient(135deg,var(--oxide) 0 2px,transparent 2px 5px)}
 .markday{align-self:center;min-height:48px;padding:0 22px;border:2px solid var(--oxide);border-radius:999px;background:var(--oxide);color:var(--on-oxide);font-weight:700;font-size:16px;cursor:pointer}
 .markday:hover{filter:brightness(1.08)}
@@ -258,11 +253,12 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
 
   <div class="grid">
     <section class="hero" aria-live="polite">
-      <p class="big" id="big"><span class="lead" id="heroLead">Zostało Ci jeszcze</span> <span class="num" id="heroNum">0</span> <span class="unit" id="heroUnit">dni w biurze</span></p>
+      <p class="big" id="big"><span class="num" id="heroNum">0</span> <span class="unit" id="heroUnit">z 0 dni w biurze</span></p>
+      <p class="cap" id="cap" hidden></p>
       <div class="prog">
         <div class="bar" id="bar" role="img"></div>
-        <details class="capd"><summary class="cap" id="cap"></summary><div class="calc" id="calc"></div></details>
       </div>
+      <details><summary>🧮 Jak to liczę</summary><div class="calc" id="calc"></div></details>
       <div class="chips" id="chips" hidden></div>
       <button type="button" class="markday" id="markToday" hidden></button>
       <p class="setup" id="setup" hidden>Liczę dla wymogu <b id="setupGoal">40% dni roboczych</b>. <button type="button" class="linkbtn" id="setupBtn">Zmień</button></p>
@@ -451,29 +447,18 @@ function render(){
   $('monthTitle').textContent = MONTHS[mo]; $('monthYear').textContent = y;
   $('todayBtn').classList.toggle('off', isNow); $('todayBtn').tabIndex = isNow ? -1 : 0;
 
-  // the answer
-  $('big').classList.toggle('done', s.left===0);
-  $('heroNum').textContent = s.left;
-  if(s.left===0){
-    $('heroLead').textContent = '';
-    $('heroNum').textContent = '✓';
-    $('heroUnit').textContent = 'Ten miesiąc masz zaliczony 🎉';
-  } else if(s.past){
-    $('heroLead').textContent = '😬 Zabrakło Ci';
-    $('heroUnit').textContent = pl(s.left,'dnia','dni','dni') + ' w biurze';
-  } else {
-    $('heroLead').textContent = pl(s.left,'Został','Zostały','Zostało') + ' Ci jeszcze';
-    $('heroUnit').textContent = pl(s.left,'dzień','dni','dni') + ' w biurze';
-  }
+  // the answer: how many office days are done out of how many are required
+  var done = s.office - s.planned, ok = done >= s.required;
+  $('big').classList.toggle('done', ok); document.querySelector('.hero').classList.toggle('ok', ok);
+  $('heroNum').textContent = done;
+  $('heroUnit').textContent = 'z ' + s.required + ' ' + pl(s.required,'dnia','dni','dni') + ' w biurze' + (ok ? ' ✓' : '');
+  $('cap').hidden = !s.planned;
+  if(s.planned) $('cap').innerHTML = '<span class="sw" aria-hidden="true"></span> + ' + s.planned + ' ' + pl(s.planned,'zaplanowany','zaplanowane','zaplanowanych');
   // progress bar: one segment per required day; solid = done, hatched = planned later this month
-  var done = s.office - s.planned, seg = '';
+  var seg = '';
   for(var i=0; i<s.required; i++) seg += '<span' + (i<done ? ' class="d"' : i<s.office ? ' class="p"' : '') + '></span>';
   $('bar').innerHTML = seg; $('bar').hidden = !s.required;
-  var cap = done + ' z ' + s.required + ' ' + pl(s.required,'dnia','dni','dni') + ' w biurze';
-  $('bar').setAttribute('aria-label', cap + (s.planned ? ', ' + s.planned + ' zaplanowane' : ''));
-  if(s.planned) cap += ' <span class="pl">· <span class="sw" aria-hidden="true"></span> ' + s.planned + ' ' + pl(s.planned,'zaplanowany','zaplanowane','zaplanowanych') + '</span>';
-  cap += ' <span class="why">skąd ' + s.required + '?</span>';
-  $('cap').innerHTML = cap;
+  $('bar').setAttribute('aria-label', done + ' z ' + s.required + (s.planned ? ', ' + s.planned + ' zaplanowane' : ''));
 
   var OR = {1:'Pon',2:'Wt',3:'Śr',4:'Czw',5:'Pt'};
 
