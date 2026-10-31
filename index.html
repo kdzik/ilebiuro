@@ -694,7 +694,9 @@ $('hist').addEventListener('click', function(e){
   window.scrollTo({top:0, behavior:'smooth'});
   goTo({y:+b.dataset.ym.slice(0,4), m:+b.dataset.ym.slice(5,7)-1});
 });
-document.addEventListener('visibilitychange', function(){ if(!document.hidden){ now = new Date(); render(); } });
+// reopening the app (from the home screen or another app) starts on "Biuro" again, like a fresh launch
+document.addEventListener('visibilitychange', function(){ if(!document.hidden){ now = new Date(); setTool('office'); render(); } });
+window.addEventListener('pageshow', function(e){ if(e.persisted){ now = new Date(); setTool('office'); render(); } });
 
 // ---- month paging -------------------------------------------------------------
 // The page follows the finger; the neighbouring months are snapshots placed beside it.
