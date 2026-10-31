@@ -9,7 +9,7 @@ A simple calculator for hybrid work: how many days you still need to be in the o
 - Calculates required office days as a percentage of working days, a number per month, or a number per week. Results always round up.
 - Takes Polish public holidays and vacation into account.
 - Supports required weekdays, e.g. "2 days on Monday or Friday".
-- Lets you mark days in a calendar and keeps a monthly history.
+- Lets you mark office days and vacation in a calendar.
 
 ## How it works
 

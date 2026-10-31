@@ -59,7 +59,7 @@ body{
 }
 button{font:inherit;color:inherit}
 /* press feedback: things shrink a touch under the finger, like iOS controls */
-.markday,.tool,.icon-btn,.todaybtn,.btn,.hrow,.chip,.xclose,.stepper button,.daypick button{transition:transform .15s var(--ease),background-color .2s,color .2s}
+.markday,.tool,.icon-btn,.todaybtn,.btn,.chip,.xclose,.stepper button,.daypick button{transition:transform .15s var(--ease),background-color .2s,color .2s}
 .markday:active,.tool:active,.icon-btn:active,.todaybtn:active,.btn:active,.xclose:active,.stepper button:active,.daypick button:active{transform:scale(.95)}
 button.c{transition:transform .15s var(--ease)}
 button.c:active{transform:scale(.92)}
@@ -95,8 +95,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .todaybtn.off{display:none}
 .todaybtn:hover{filter:brightness(1.08)}
 
-.grid{display:grid;gap:16px;grid-template-columns:1fr;grid-template-areas:"hero" "cal" "hist"}
-@media (min-width:860px){.grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);grid-template-areas:"hero cal" "hist cal";align-items:start}}
+.grid{display:grid;gap:16px;grid-template-columns:1fr;grid-template-areas:"hero" "cal"}
+@media (min-width:860px){.grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);grid-template-areas:"hero cal";align-items:start}}
 
 /* hero */
 .hero{grid-area:hero;background:var(--card);border-radius:var(--r-card);padding:16px;display:flex;flex-direction:column;gap:10px}
@@ -175,16 +175,6 @@ button.c:hover{background:var(--oxide-soft)}
 .c.m-office.today{box-shadow:none}
 .c.m-office.today .n{color:var(--on-oxide)!important}
 
-/* history */
-.hist{grid-area:hist;display:flex;flex-direction:column;background:var(--card);border-radius:var(--r-card);padding:6px 16px}
-.hist h3{margin:0 0 4px;padding-top:8px;font-weight:600;font-size:13px;color:var(--muted)}
-.hrow{width:100%;display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:9px 0;border:0;border-bottom:.5px solid var(--panel-2);background:none;cursor:pointer;text-align:left;font-size:15px}
-.hrow:last-child{border-bottom:0}
-.hrow:hover .m{color:var(--oxide)}
-.hrow .m{font-weight:600}
-.hrow .v{font-variant-numeric:tabular-nums;color:var(--muted)}
-.st{font-size:13px;font-weight:700;white-space:nowrap;min-width:1.2em;text-align:right}
-.st.ok{color:var(--ok)} .st.bad{color:var(--oxide)} .st.run{color:var(--muted)}
 
 /* settings */
 /* settings panel grows out of the gear: anchored so its X sits where the gear is */
@@ -348,10 +338,6 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
       <ul class="hols" id="hols" hidden></ul>
     </section>
 
-    <section class="hist" id="histWrap" hidden>
-      <h3>📅 Historia</h3>
-      <div id="hist"></div>
-    </section>
   </div>
   </div></div>
   </div>
@@ -602,7 +588,6 @@ function render(){
   $('calc').innerHTML = rows.map(function(r){ return '<div><span>' + r[0] + '</span><span>' + r[1] + '</span></div>'; }).join('');
 
   renderCal();
-  renderHist();
 }
 
 function renderCal(){
@@ -624,18 +609,6 @@ function renderCal(){
   var hl = '';
   for(d=1; d<=n; d++){ var hk = key(y, mo+1, d); if(hol[hk]) hl += '<li><b>🎉 ' + d + ' ' + MONTHS_SHORT[mo] + '</b><span>' + hol[hk] + '</span></li>'; }
   $('hols').innerHTML = ''; $('hols').hidden = true;
-}
-
-function renderHist(){
-  var months = {}, cur = now.getFullYear() + '-' + pad(now.getMonth()+1);
-  Object.keys(state.days).forEach(function(k){ var ym = k.slice(0,7); if(ym < cur) months[ym] = 1; });
-  var list = Object.keys(months).sort().reverse().slice(0, 12);
-  $('histWrap').hidden = !list.length;
-  $('hist').innerHTML = list.map(function(ym){
-    var y = +ym.slice(0,4), mo = +ym.slice(5,7)-1, s = stats(y, mo);
-    var st = s.left===0 ? '<span class="st ok">✅</span>' : '<span class="st bad">❌ −' + s.left + '</span>';
-    return '<button type="button" class="hrow" data-ym="' + ym + '"><span class="m">' + MONTHS[mo] + ' ' + y + '</span><span class="v">' + s.office + ' z ' + s.required + '</span>' + st + '</button>';
-  }).join('');
 }
 
 function setTool(t){
@@ -664,11 +637,6 @@ $('markToday').addEventListener('click', function(){
   save(); render(); popDay(k, state.days[k] === 'office');
 });
 $('todayBtn').addEventListener('click', function(){ goTo({y:now.getFullYear(), m:now.getMonth()}); });
-$('hist').addEventListener('click', function(e){
-  var b = e.target.closest('[data-ym]'); if(!b) return;
-  window.scrollTo({top:0, behavior:'smooth'});
-  goTo({y:+b.dataset.ym.slice(0,4), m:+b.dataset.ym.slice(5,7)-1});
-});
 // reopening the app (from the home screen or another app) starts on "Biuro" again, like a fresh launch
 document.addEventListener('visibilitychange', function(){ if(!document.hidden){ now = new Date(); setTool('office'); render(); } });
 window.addEventListener('pageshow', function(e){ if(e.persisted){ now = new Date(); setTool('office'); render(); } });
@@ -676,7 +644,7 @@ window.addEventListener('pageshow', function(e){ if(e.persisted){ now = new Date
 // ---- month paging -------------------------------------------------------------
 // The page follows the finger; the neighbouring months are snapshots placed beside it.
 // Past ~30% of the width, or a quick flick, it settles on the next/previous month,
-// otherwise it springs back. Arrows, "Dziś" and history use the same slide.
+// otherwise it springs back. Arrows and "Dziś" use the same slide.
 var pager = $('pager'), page = $('page'), swipe = $('swipe'), pg = null, busy = false;
 function shiftMonth(v, d){ var m = v.m + d; return {y: v.y + Math.floor(m / 12), m: ((m % 12) + 12) % 12}; }
 function cmpView(a, b){ return (a.y - b.y) * 12 + (a.m - b.m); }
