@@ -85,10 +85,10 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .mbl{justify-self:start;min-width:0}
 .mbr{justify-self:end}
 .mnav{display:flex;align-items:center;gap:6px;min-width:0}
-.mhead{min-width:0;display:flex;align-items:baseline;justify-content:center;gap:7px;text-align:center}
+.mhead{min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center}
 .monthbar h2{margin:0;font-weight:700;font-size:30px;line-height:1.05;letter-spacing:-.01em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* the year only shows for months outside the current year, small, next to the name */
-.monthbar .my{font-size:18px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* the year only shows for months outside the current year, under the name */
+.monthbar .my{margin-top:2px;font-size:15px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
 .icon-btn{white-space:nowrap}
 .sign{white-space:nowrap}
 .todaybtn{flex:none;height:30px;padding:0 10px;font-size:13px!important;border:0;border-radius:999px;background:var(--oxide);color:var(--on-oxide);font-weight:700;font-size:15px;cursor:pointer;white-space:nowrap}
