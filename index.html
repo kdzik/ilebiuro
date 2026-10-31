@@ -191,8 +191,13 @@ button.c:hover{background:var(--oxide-soft)}
 .st.ok{color:var(--ok)} .st.bad{color:var(--oxide)} .st.run{color:var(--muted)}
 
 /* settings */
-dialog{border:0;padding:0;background:var(--card);color:var(--ink);border-radius:var(--r-card);width:min(460px,calc(100vw - 24px));max-height:calc(100dvh - 40px)}
-dialog::backdrop{background:rgba(14,12,11,.78);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+/* settings panel grows out of the gear: anchored so its X sits where the gear is */
+dialog{border:0;padding:0;background:var(--card);color:var(--ink);border-radius:var(--r-card);
+  position:fixed;margin:0;inset:auto;top:var(--top,12px);right:var(--right,12px);
+  width:min(380px,calc(100vw - 16px));max-height:calc(100dvh - var(--top,12px) - 12px);overflow:auto;
+  transform-origin:var(--ox,100%) var(--oy,0);
+  box-shadow:0 12px 40px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.08)}
+dialog::backdrop{background:rgba(14,12,11,.32)}
 /* settings: what matters is open, everything optional is a collapsed row */
 .dlg{padding:14px 16px 18px;display:flex;flex-direction:column;gap:14px}
 .dlg-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -273,8 +278,8 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
 @keyframes segIn{0%{transform:scaleY(1)}40%{transform:scaleY(1.9)}100%{transform:scaleY(1)}}
 @keyframes cheer{0%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
 @keyframes reveal{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-@keyframes sheetIn{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
-@keyframes sheetOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(20px) scale(.98)}}
+@keyframes growIn{0%{opacity:0;transform:scale(.25)}35%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes shrinkOut{0%{opacity:1;transform:none}65%{opacity:1}100%{opacity:0;transform:scale(.25)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes fadeOut{from{opacity:1}to{opacity:0}}
 .c.pop{animation:pop .42s var(--ease)}
@@ -285,9 +290,9 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
 .bar span.grow{animation:segIn .45s var(--ease)}
 .hero.cheer .bar span{animation:cheer .5s var(--ease) calc(var(--i) * 45ms) both}
 .hero details[open] .calc,.opt[open] .optbody{animation:reveal .3s var(--ease)}
-dialog[open]{animation:sheetIn .28s var(--ease)}
+dialog[open]{animation:growIn .3s var(--ease)}
 dialog[open]::backdrop{animation:fadeIn .22s ease}
-dialog.closing{animation:sheetOut .18s ease-in forwards}
+dialog.closing{animation:shrinkOut .2s cubic-bezier(.4,0,.8,.6) forwards}
 dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
 .icon-btn svg{transition:transform .6s var(--ease)}
 .icon-btn.spin svg{transform:rotate(120deg)}
@@ -829,7 +834,23 @@ function openSettings(){
   renderAmount(); renderRuleSet();
   $('settingsBtn').classList.add('spin');
   if(dlg.showModal) dlg.showModal(); else dlg.setAttribute('open','');
+  anchorSettings();
 }
+// Put the panel's X exactly where the gear is and make it grow from that point.
+// Runs right after opening, before the first frame is painted.
+function anchorSettings(){
+  var g = $('settingsBtn').getBoundingClientRect(), vw = document.documentElement.clientWidth;
+  var gx = g.left + g.width / 2, gy = Math.max(28, g.top + g.height / 2);
+  dlg.style.setProperty('--top', '0px'); dlg.style.setProperty('--right', '0px');
+  dlg.style.animation = 'none';            // measure the panel at full size, not mid-animation
+  var d = dlg.getBoundingClientRect(), x = dlg.querySelector('.xclose').getBoundingClientRect();
+  dlg.style.animation = '';
+  var fromRight = d.right - (x.left + x.width / 2), fromTop = (x.top + x.height / 2) - d.top;
+  var right = Math.max(8, vw - gx - fromRight), top = Math.max(8, gy - fromTop);
+  dlg.style.setProperty('--right', right + 'px'); dlg.style.setProperty('--top', top + 'px');
+  dlg.style.setProperty('--ox', (d.width - fromRight) + 'px'); dlg.style.setProperty('--oy', fromTop + 'px');
+}
+window.addEventListener('resize', function(){ if(dlg.open) anchorSettings(); });
 function closeSettings(){
   if(!dlg.open || dlg.classList.contains('closing')) return;
   dlg.classList.add('closing');
