@@ -154,7 +154,7 @@ summary::-webkit-details-marker{display:none}
 .hols li{display:flex;gap:10px;align-items:baseline}
 .hols b{color:var(--oxide);font-family:var(--f-display);font-size:17px;font-weight:600;min-width:76px;font-variant-numeric:tabular-nums}
 .tool .em{font-size:16px;line-height:1}
-.c.hol{justify-content:flex-start;gap:2px;padding:4px}
+.c.hol{gap:2px;padding:4px}
 .c .hn{font-size:10px;font-weight:700;line-height:1;color:var(--oxide);hyphens:manual;overflow-wrap:normal;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-width:100%}
 @media (max-width:420px){.c .hn{font-size:8.5px;-webkit-line-clamp:2}}
 .cal .c .em-t{font-size:13px;line-height:1;overflow:visible}
@@ -162,7 +162,8 @@ summary::-webkit-details-marker{display:none}
 /* no grid lines: days are soft rounded tiles separated by space */
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .dow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:center;padding:2px 0 4px}
-.c{background:var(--wall);border-radius:10px;min-height:44px;aspect-ratio:1/1;padding:6px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;border:0;text-align:left;min-width:0;position:relative}
+.c{background:var(--wall);border-radius:10px;min-height:44px;aspect-ratio:1/1;padding:6px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px;border:0;text-align:center;min-width:0;position:relative}
+.c .em-t:empty{display:none}
 .c .n{font-size:17px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
 .c .t{font-size:10.5px;font-weight:700;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .c.empty,.c.we,.c.hol{background:none}
