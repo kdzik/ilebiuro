@@ -117,7 +117,6 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .markday{min-height:50px;padding:0 22px;border:0;border-radius:12px;background:var(--oxide);color:var(--on-oxide);font-weight:700;font-size:16px;cursor:pointer}
 .markday:hover{filter:brightness(1.08)}
 .markday[aria-pressed="true"]{background:var(--oxide-soft);color:var(--oxide)}
-.setup{margin:0;font-size:14px;text-align:center;color:var(--muted)}
 .linkbtn{border:0;background:none;padding:0;color:var(--oxide);font-weight:700;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .line{margin:0;font-size:16px;font-weight:500}
 .line b{font-variant-numeric:tabular-nums}
@@ -338,7 +337,6 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
       <details><summary>🧮 Jak to liczę</summary><div class="calc" id="calc"></div></details>
       <div class="chips" id="chips" hidden></div>
       <button type="button" class="markday" id="markToday" hidden></button>
-      <p class="setup" id="setup" hidden>Liczę dla wymogu <b id="setupGoal">40% dni roboczych</b>. <button type="button" class="linkbtn" id="setupBtn">Zmień</button></p>
     </section>
 
     <section class="calcard">
@@ -346,7 +344,6 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
         <button class="tool" data-tool="office" aria-pressed="true"><span class="em">🏢</span>Biuro</button>
         <button class="tool" data-tool="vac" aria-pressed="false"><span class="em">🌴</span>Urlop</button>
       </div>
-      <p class="hint" id="hint" aria-live="polite"></p>
       <div class="cal" id="cal"></div>
       <ul class="hols" id="hols" hidden></ul>
     </section>
@@ -588,13 +585,6 @@ function render(){
     $('markToday').textContent = tm==='office' ? '✓ Dziś w biurze · cofnij' : '🏢 Jestem dziś w biurze';
   }
 
-  // first run: say what requirement we assume, with a way to change it
-  var empty = !Object.keys(state.days).length;
-  $('setup').hidden = !empty;
-  $('setupGoal').textContent = st.mode==='month' ? st.perMonth + ' ' + pl(st.perMonth,'dzień','dni','dni') + ' w miesiącu'
-                             : st.mode==='week' ? st.perWeek + ' ' + pl(st.perWeek,'dzień','dni','dni') + ' w tygodniu'
-                             : st.percent + '% dni roboczych';
-
   var ch = s.rules.map(function(r){
     var names = r.d.slice().sort().map(function(w){ return OR[w]; }).join(' lub ');
     return '<span class="chip' + (r.done>=r.n ? ' ok' : '') + '">' + names + ': ' + Math.min(r.done, r.n) + ' z ' + r.n + (r.done>=r.n ? ' ✓' : '') + '</span>';
@@ -613,14 +603,6 @@ function render(){
 
   renderCal();
   renderHist();
-  renderHint();
-}
-
-// first-run tip only; Urlop works exactly like Biuro, no extra banners
-function renderHint(){
-  var h = $('hint');
-  h.textContent = '👆 Wybierz Biuro albo Urlop i stuknij dzień w kalendarzu.';
-  h.hidden = Object.keys(state.days).length > 0;
 }
 
 function renderCal(){
@@ -660,7 +642,6 @@ function setTool(t){
   state.settings.tool = t; save();
   document.querySelectorAll('.tools').forEach(function(g){ g.dataset.t = t; });
   document.querySelectorAll('.tool').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.tool===t ? 'true' : 'false'); });
-  renderHint();
 }
 
 $('cal').addEventListener('click', function(e){
@@ -682,7 +663,6 @@ $('markToday').addEventListener('click', function(){
   else { state.days[k] = 'office'; toast('🏢 Zapisano: dziś w biurze'); }
   save(); render(); popDay(k, state.days[k] === 'office');
 });
-$('setupBtn').addEventListener('click', function(){ openSettings(); });
 $('todayBtn').addEventListener('click', function(){ goTo({y:now.getFullYear(), m:now.getMonth()}); });
 $('hist').addEventListener('click', function(e){
   var b = e.target.closest('[data-ym]'); if(!b) return;
