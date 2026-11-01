@@ -150,8 +150,8 @@ summary::-webkit-details-marker{display:none}
 .hols b{color:var(--oxide);font-family:var(--f-display);font-size:17px;font-weight:600;min-width:76px;font-variant-numeric:tabular-nums}
 .tool .em{font-size:16px;line-height:1}
 .c.hol{justify-content:flex-start;gap:2px;padding:4px}
-.c .hn{font-size:10px;font-weight:700;line-height:1;color:var(--oxide);hyphens:manual;overflow-wrap:normal;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-width:100%}
-@media (max-width:420px){.c .hn{font-size:8.5px;-webkit-line-clamp:2}}
+.c .hn{font-size:10px;font-weight:700;line-height:1.2;padding:1px 0;flex:none;color:var(--oxide);hyphens:manual;overflow-wrap:normal;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-width:100%}
+@media (max-width:540px){.c.hol{padding:2px 2px;gap:1px}.c.hol .n{font-size:14px}.c .hn{font-size:8px;line-height:1.15;-webkit-line-clamp:2}}
 .cal .c .em-t{font-size:13px;line-height:1;overflow:visible}
 .hint{font-size:13px;color:var(--muted);margin:0;text-align:center}
 /* no grid lines: days are soft rounded tiles separated by space */
@@ -392,7 +392,7 @@ var MONTHS_SHORT = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź'
 var DOW_SHORT = ['Nd','Pn','Wt','Śr','Cz','Pt','So'];
 var MARK_LABEL = {office:'biuro',vac:'urlop'};
 var MARK_EMOJI = {office:'🏢',vac:'🌴'};
-var HOL_SHORT = {'Nowy Rok':'Nowy Rok','Trzech Króli':'Trzech Króli','Święto Pracy':'Święto Pracy','Święto Konstytucji 3 Maja':'3 Maja','Wniebowzięcie NMP':'Wniebo&shy;wzięcie','Wszystkich Świętych':'Wszyst&shy;kich Świętych','Święto Niepodległości':'Niepodle&shy;głości','Wigilia':'Wigilia','Boże Narodzenie':'Boże Narodz.','Drugi dzień świąt':'2. dzień świąt','Wielkanoc':'Wielkanoc','Poniedziałek Wielkanocny':'Pon. Wielka&shy;nocny','Zielone Świątki':'Zielone Świątki','Boże Ciało':'Boże Ciało'};
+var HOL_SHORT = {'Nowy Rok':'Nowy Rok','Trzech Króli':'Trzech Króli','Święto Pracy':'Święto Pracy','Święto Konstytucji 3 Maja':'3 Maja','Wniebowzięcie NMP':'Wniebo&shy;wzięcie','Wszystkich Świętych':'Wszyst&shy;kich Św.','Święto Niepodległości':'Niepodle&shy;głości','Wigilia':'Wigilia','Boże Narodzenie':'Boże Narodz.','Drugi dzień świąt':'2. dzień świąt','Wielkanoc':'Wielkanoc','Poniedziałek Wielkanocny':'Pon. Wielk.','Zielone Świątki':'Zielone Świątki','Boże Ciało':'Boże Ciało'};
 
 function defaults(){ return {mode:'pct', percent:40, perMonth:8, perWeek:2, rules:[], tool:'office'}; }
 function num(v, f){ v = Number(v); return isFinite(v) ? v : f; }
