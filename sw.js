@@ -1,5 +1,5 @@
 // Offline cache for Dni w Biurze. Only files from this site; no external requests.
-const VERSION = 'biuro-v62';
+const VERSION = 'biuro-v63';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

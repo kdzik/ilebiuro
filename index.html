@@ -234,6 +234,10 @@ dialog::backdrop{background:rgba(14,12,11,.32)}
 .rdesc{font-size:13px;color:var(--muted);margin:0}
 .rulebox .stepper button{width:36px;height:34px}
 .rulebox .stepper output{width:36px;height:34px;font-size:17px}
+/* value + optional "%" sit together, centred between − and + */
+.amtbox{width:64px;height:40px;display:flex;align-items:center;justify-content:center;cursor:text}
+.amtbox input{width:auto;min-width:1ch;flex:none;text-align:center}
+.unit-pct{font-size:20px;line-height:40px;font-weight:700;color:var(--muted);margin-left:1px}
 .stepper input{padding:0;margin:0;-moz-appearance:textfield;appearance:textfield;line-height:40px}
 .stepper input::-webkit-inner-spin-button,.stepper input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .howto{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.6}
@@ -362,7 +366,7 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
         </div>
         <div class="srow">
           <span id="amtLabel">Procent dni roboczych</span>
-          <div class="stepper"><button type="button" data-amt="-1" aria-label="Mniej">−</button><input id="amtInput" type="number" min="0" step="1" inputmode="numeric" aria-label="Wartość"><button type="button" data-amt="1" aria-label="Więcej">+</button></div>
+          <div class="stepper"><button type="button" data-amt="-1" aria-label="Mniej">−</button><label class="amtbox" for="amtInput"><input id="amtInput" type="number" min="0" step="1" inputmode="numeric" aria-label="Wartość"><span class="unit-pct" id="amtUnit" aria-hidden="true">%</span></label><button type="button" data-amt="1" aria-label="Więcej">+</button></div>
         </div>
       </div>
     </section>
@@ -867,7 +871,11 @@ function renderAmount(){
   $('amtLabel').textContent = m.label;
   $('amtInput').max = m.max;
   $('amtInput').value = state.settings[m.field];
+  $('amtUnit').hidden = state.settings.mode !== 'pct';
+  fitAmt();
 }
+// size the field to its digits so the value and "%" stay centred together
+function fitAmt(){ var i = $('amtInput'); i.style.width = Math.max(1, String(i.value).length) + 'ch'; }
 function setAmt(v){
   var m = MODE[state.settings.mode];
   state.settings[m.field] = Math.max(0, Math.min(m.max, Math.round(num(v, state.settings[m.field]))));
@@ -889,6 +897,7 @@ document.querySelectorAll('[data-theme-opt]').forEach(function(b){ b.addEventLis
 applyTheme();
 document.querySelectorAll('[data-amt]').forEach(function(b){ b.addEventListener('click', function(){ var m = MODE[state.settings.mode]; setAmt(state.settings[m.field] + (+b.dataset.amt) * m.step); }); });
 $('amtInput').addEventListener('change', function(){ setAmt(this.value); });
+$('amtInput').addEventListener('input', fitAmt);
 $('ruleSet').addEventListener('click', function(e){
   var b = e.target.closest('button[data-i]'); if(!b) return;
   var r = state.settings.rules[+b.dataset.i]; if(!r) return;
