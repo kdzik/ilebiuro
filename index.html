@@ -79,7 +79,8 @@ button.c:active{transform:scale(.92)}
 .page.nofx,.page.nofx *{animation:none!important;transition:none!important}
 .page.ghost{position:absolute;top:0;left:var(--gut);right:var(--gut);pointer-events:none;contain:layout paint}
 
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:6px}
+/* the app name is already under the home screen icon and in the tab title: keep it for screen readers only */
+header{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .sign{font-weight:700;font-size:17px;color:var(--oxide);margin:0;line-height:1}
 .hbtns{display:flex;gap:8px}
 .icon-btn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 10px;border:0;background:none;color:var(--oxide);border-radius:10px;cursor:pointer;font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
@@ -253,9 +254,6 @@ textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-rad
   .sign{font-size:clamp(17px,5.4vw,22px)}
   .hbtns{gap:6px}
   .monthbar h2{font-size:clamp(22px,7.4vw,30px);letter-spacing:0}
-  /* phone: the app name is already on the home screen icon; give its row to the calendar */
-  header{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
-  .pct{display:none}
   .monthbar .icon-btn{width:40px;padding:0;justify-content:center}
   .monthbar{gap:4px}
   .mnav{gap:2px}
@@ -319,7 +317,7 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
       <div class="mhead"><h2 id="monthTitle">Październik</h2><span class="my" id="monthYear">2026</span></div>
     </div>
     <div class="mbr">
-      <button class="icon-btn" id="settingsBtn" aria-label="Ustawienia"><span class="pct" id="pctLabel">40%</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+      <button class="icon-btn" id="settingsBtn" aria-label="Ustawienia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
     </div>
   </div>
 
@@ -372,6 +370,8 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
         <p class="note">Tylko jeśli firma wymaga konkretnych dni, np. 1 dzień w pon. lub pt.</p>
         <div id="ruleSet" class="ruleset"></div>
         <button type="button" class="btn" id="addRule">+ Dodaj wymóg</button>
+      </div>
+    </details>
     <section>
       <h3>Motyw</h3>
       <div class="daypick modes" id="themePick" role="group" aria-label="Motyw">
@@ -380,8 +380,6 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
         <button type="button" data-theme-opt="dark">Ciemny</button>
       </div>
     </section>
-      </div>
-    </details>
     <details class="opt" id="installInfo">
       <summary><span>Zainstaluj na telefonie</span></summary>
       <div class="optbody">
@@ -534,7 +532,6 @@ function haptic(){ try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){} 
 // month bar: title, year, "Dziś"; switched as soon as a swipe knows where it is going
 function setHeader(v){
   var st = state.settings, isNow = v.y===now.getFullYear() && v.m===now.getMonth();
-  $('pctLabel').textContent = st.mode==='month' ? st.perMonth + '/mies.' : st.mode==='week' ? st.perWeek + '/tydz.' : st.percent + '%';
   var changed = $('monthTitle').textContent !== MONTHS[v.m] || $('monthYear').textContent !== String(v.y);
   $('monthTitle').textContent = MONTHS[v.m]; $('monthYear').textContent = v.y;
   $('monthYear').hidden = v.y === now.getFullYear();
@@ -872,6 +869,9 @@ function renderAmount(){
 function setAmt(v){
   var m = MODE[state.settings.mode];
   state.settings[m.field] = Math.max(0, Math.min(m.max, Math.round(num(v, state.settings[m.field]))));
+  save(); renderAmount(); render();
+}
+document.querySelectorAll('[data-mode]').forEach(function(b){ b.addEventListener('click', function(){ state.settings.mode = b.dataset.mode; save(); renderAmount(); render(); }); });
 // theme: "system" follows the phone; light/dark override it and are remembered with the other settings
 var THEME_BAR = {light:'#F2F1EE', dark:'#18191A'};
 function applyTheme(){
@@ -885,9 +885,6 @@ function applyTheme(){
 }
 document.querySelectorAll('[data-theme-opt]').forEach(function(b){ b.addEventListener('click', function(){ state.settings.theme = b.dataset.themeOpt; save(); applyTheme(); }); });
 applyTheme();
-  save(); renderAmount(); render();
-}
-document.querySelectorAll('[data-mode]').forEach(function(b){ b.addEventListener('click', function(){ state.settings.mode = b.dataset.mode; save(); renderAmount(); render(); }); });
 document.querySelectorAll('[data-amt]').forEach(function(b){ b.addEventListener('click', function(){ var m = MODE[state.settings.mode]; setAmt(state.settings[m.field] + (+b.dataset.amt) * m.step); }); });
 $('amtInput').addEventListener('change', function(){ setAmt(this.value); });
 $('ruleSet').addEventListener('click', function(e){
