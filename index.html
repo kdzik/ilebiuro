@@ -30,7 +30,7 @@ try{ var t = (JSON.parse(localStorage.getItem('dniWBiurze.v1')) || {}).settings;
   --seg-track:rgba(118,118,128,.12); --seg-thumb:#FFFFFF; --seg-shadow:0 1px 3px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04);
   --ink:#262624; --muted:#6B6863;
   --oxide:#A8473C; --on-oxide:#FFFFFF; --oxide-soft:#F2DDD8; --frame:#B5564A;
-  --leaf:#4C7846; --leaf-soft:#DCE8D7;
+  --leaf:#4C7846; --leaf-soft:#DCE8D7; --vac:#BFDBB3;
   --warn:#8F530C; --ok:#3F7A3A;
   --f-display:"Avenir Next Condensed","Roboto Condensed","sans-serif-condensed","Arial Narrow",system-ui,sans-serif;
   --f-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -43,7 +43,7 @@ try{ var t = (JSON.parse(localStorage.getItem('dniWBiurze.v1')) || {}).settings;
   --seg-track:rgba(0,0,0,.38); --seg-thumb:#55585E; --seg-shadow:0 1px 4px rgba(0,0,0,.45);
   --ink:#ECE9E4; --muted:#A39F98;
   --oxide:#D96B58; --on-oxide:#1B0E0B; --oxide-soft:#3B2420; --frame:#8C4136;
-  --leaf:#8BBA81; --leaf-soft:#223220;
+  --leaf:#8BBA81; --leaf-soft:#223220; --vac:#35562E;
   --warn:#E7AE5C; --ok:#8BBA81; color-scheme:dark;
 }}
 :root[data-theme="dark"]{
@@ -51,7 +51,7 @@ try{ var t = (JSON.parse(localStorage.getItem('dniWBiurze.v1')) || {}).settings;
   --seg-track:rgba(0,0,0,.38); --seg-thumb:#55585E; --seg-shadow:0 1px 4px rgba(0,0,0,.45);
   --ink:#ECE9E4; --muted:#A39F98;
   --oxide:#D96B58; --on-oxide:#1B0E0B; --oxide-soft:#3B2420; --frame:#8C4136;
-  --leaf:#8BBA81; --leaf-soft:#223220;
+  --leaf:#8BBA81; --leaf-soft:#223220; --vac:#35562E;
   --warn:#E7AE5C; --ok:#8BBA81; color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -182,7 +182,7 @@ button.c{cursor:pointer}
 button.c:hover{background:var(--oxide-soft)}
 .c.past:not(.m-office):not(.m-vac) .n{color:var(--muted);opacity:.5}
 .c.m-office,.c.m-office:hover{background:var(--oxide);color:var(--on-oxide)}
-.c.m-vac,.c.m-vac:hover{background:var(--leaf-soft);color:var(--ink)}
+.c.m-vac,.c.m-vac:hover{background:var(--vac);color:var(--ink)}
 .c.today{box-shadow:inset 0 0 0 2px var(--oxide)}
 .c.today .n{color:var(--oxide)!important}
 .c.m-office.today{box-shadow:none}
