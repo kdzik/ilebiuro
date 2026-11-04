@@ -261,6 +261,22 @@ dialog.vdlg::backdrop{background:rgba(14,12,11,.78)}
 textarea{width:100%;min-height:70px;border:1.5px solid var(--panel-2);border-radius:var(--r);background:var(--wall);color:var(--ink);font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:8px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--wall);padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:20}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+/* install nudge: shown only in a phone browser, slides up from the bottom, never blocks the app */
+.nudge{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:center;pointer-events:none;
+  padding:0 max(10px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px))}
+.nudge .sheet{pointer-events:auto;width:100%;max-width:440px;background:var(--card);color:var(--ink);border-radius:20px;
+  box-shadow:0 10px 40px rgba(0,0,0,.28),0 2px 8px rgba(0,0,0,.12);padding:16px 16px 14px;display:flex;flex-direction:column;gap:10px;
+  transform:translateY(130%);transition:transform .45s var(--ease)}
+.nudge.on .sheet{transform:none}
+.nudge h2{margin:0;font-size:18px;font-weight:700;line-height:1.25;display:flex;align-items:center;gap:12px}
+.nudge h2 img{width:40px;height:40px;border-radius:10px;flex:none}
+.nudge p{margin:0;font-size:14px;line-height:1.45;color:var(--muted)}
+.nudge .howto{font-size:14.5px}
+.nudge .heads-up{color:var(--ink);background:var(--oxide-soft);border-radius:10px;padding:8px 10px;font-size:13.5px}
+.nudge .acts{display:flex;gap:8px;margin-top:2px}
+.nudge .acts .btn{flex:1;height:44px;font-size:15px}
+.nudge .acts .later{flex:0 0 auto;background:none;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.nudge .sheet{transition:none}}
 @media (max-width:420px){
   /* phone: keep the answer and the calendar's busy rows on the first screen */
   .wrap,.swipe{gap:12px}
@@ -416,6 +432,7 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
   <div class="vhead"><h2 id="vdlgTitle">Instalacja na iPhonie</h2><button type="button" class="xclose" id="vclose" aria-label="Zamknij"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <video id="howtoVideo" muted loop playsinline preload="none" poster="onboarding-ios.jpg" aria-label="Film: jak dodać aplikację do ekranu początkowego iPhone'a"></video>
 </dialog>
+<div class="nudge" id="nudge" hidden><div class="sheet" role="dialog" aria-labelledby="nudgeTitle" id="nudgeSheet"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -845,12 +862,13 @@ function renderRuleSet(){
 $('addRule').addEventListener('click', function(){ state.settings.rules.push({n:1, d:[1]}); save(); renderRuleSet(); render(); });
 // onboarding video: load the file only when someone opens it; stop it on close
 var vdlg = $('vdlg'), vid = $('howtoVideo');
-$('howtoVideoBtn').addEventListener('click', function(){
+$('howtoVideoBtn').addEventListener('click', openVideo);
+function openVideo(){
   if(!vid.getAttribute('src')) vid.src = 'onboarding-ios.mp4';
   if(vdlg.showModal) vdlg.showModal(); else vdlg.setAttribute('open','');
   try{ vid.currentTime = 0; }catch(e){}
   var p = vid.play(); if(p && p.catch) p.catch(function(){});
-});
+}
 function closeVideo(){ vid.pause(); if(vdlg.open) vdlg.close(); }
 $('vclose').addEventListener('click', closeVideo);
 vdlg.addEventListener('click', function(e){
@@ -952,10 +970,64 @@ window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); 
 $('installBtn').addEventListener('click', function(){
   if(!deferred) return;
   deferred.prompt();
-  deferred.userChoice.then(function(r){ if(r && r.outcome === 'accepted'){ $('installInfo').hidden = true; } }).catch(function(){});
+  deferred.userChoice.then(function(r){ if(r && r.outcome === 'accepted'){ $('installInfo').hidden = true; hideNudge(); } }).catch(function(){});
   deferred = null; $('installBtn').hidden = true; $('howto').hidden = false;
 });
-window.addEventListener('appinstalled', function(){ $('installInfo').hidden = true; });
+window.addEventListener('appinstalled', function(){ $('installInfo').hidden = true; hideNudge(); });
+
+// ---- install nudge: in a phone browser (not the installed app) suggest installing, at most every few days
+var NUDGE_KEY = 'dniWBiurze.installNudge', NUDGE_SNOOZE_DAYS = 3, UA = navigator.userAgent;
+var IN_APP = /FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram|MicroMessenger|Line\/|TikTok|musical_ly|Snapchat|LinkedInApp|Twitter/i.test(UA);
+var IOS_OTHER = OS === 'ios' && /CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(UA);   // Chrome, Firefox, Edge… on iPhone
+function isInstalled(){ try{ return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }catch(e){ return false; } }
+function nudgeSnoozed(){ try{ return +localStorage.getItem(NUDGE_KEY) > Date.now(); }catch(e){ return false; } }
+function K(t){ return '<span class="key">' + t + '</span>'; }
+var IOS_STEPS = K('•••') + ' → ' + K('Udostępnij') + ' → ' + K('Do ekranu głównego') + ' → ' + K('Dodaj');
+function renderNudge(){
+  var title = 'Dodaj aplikację do ekranu głównego', body = '', acts = '';
+  var why = '<p>Otwiera się jednym stuknięciem, działa bez internetu, a Twoje dni zapisują się bezpieczniej.</p>';
+  if(IN_APP){
+    title = 'Otwórz w przeglądarce, żeby zainstalować';
+    body = '<p>Z Messengera i podobnych aplikacji nie da się dodać apki do ekranu.</p><ul class="howto"><li>'
+         + (OS === 'ios' ? K('⋯') + ' w rogu → ' + K('Otwórz w przeglądarce') + ', potem w Safari: ' + IOS_STEPS
+                         : K('⋮') + ' w rogu → ' + K('Otwórz w Chrome'))
+         + '</li></ul>';
+    acts = '<button type="button" class="btn primary" data-nudge="copy">Kopiuj link</button>';
+  } else if(OS === 'ios'){
+    body = why + '<ul class="howto"><li>' + (IOS_OTHER ? 'Najłatwiej w Safari. Otwórz tę stronę w Safari, potem: ' : '') + IOS_STEPS + '</li></ul>'
+         + '<p class="heads-up">Zainstaluj, zanim zaczniesz zaznaczać dni. Dane z przeglądarki nie przejdą do aplikacji.</p>';
+    acts = (IOS_OTHER ? '<button type="button" class="btn" data-nudge="copy">Kopiuj link</button>' : '')
+         + '<button type="button" class="btn primary" data-nudge="video">▶ Zobacz film</button>';
+  } else {
+    body = why + (deferred ? '' : '<ul class="howto"><li>' + K('⋮') + ' → ' + K('Zainstaluj aplikację') + '</li></ul>');
+    acts = deferred ? '<button type="button" class="btn primary" data-nudge="install">Zainstaluj</button>' : '';
+  }
+  $('nudgeSheet').innerHTML = '<h2 id="nudgeTitle"><img src="icon-192.png" alt="">' + title + '</h2>' + body
+    + '<div class="acts">' + acts + '<button type="button" class="btn later" data-nudge="later">Nie teraz</button></div>';
+}
+function showNudge(){
+  if(isInstalled() || nudgeSnoozed() || (OS !== 'ios' && OS !== 'android')) return;
+  renderNudge(); $('nudge').hidden = false;
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ $('nudge').classList.add('on'); }); });
+}
+function hideNudge(){
+  var n = $('nudge'); if(n.hidden) return;
+  n.classList.remove('on'); setTimeout(function(){ n.hidden = true; }, 450);
+}
+$('nudge').addEventListener('click', function(e){
+  var b = e.target.closest('[data-nudge]'); if(!b) return;
+  var a = b.dataset.nudge;
+  if(a === 'later'){ try{ localStorage.setItem(NUDGE_KEY, String(Date.now() + NUDGE_SNOOZE_DAYS * 864e5)); }catch(err){} hideNudge(); }
+  if(a === 'video') openVideo();
+  if(a === 'install') $('installBtn').click();
+  if(a === 'copy'){
+    var url = location.href.split('#')[0];
+    try{ navigator.clipboard.writeText(url).then(function(){ toast('Skopiowano link'); }, function(){ toast(url); }); }catch(err){ toast(url); }
+  }
+});
+// Android may offer the install button a moment after load: refresh the sheet when it does
+window.addEventListener('beforeinstallprompt', function(){ if(!$('nudge').hidden) renderNudge(); });
+setTimeout(showNudge, 1200);
 if('serviceWorker' in navigator && location.protocol === 'https:'){
   // Installed apps are often only resumed, not reopened, so nothing would ever check for
   // a new version. Check on start and every time the app comes back to the foreground;
