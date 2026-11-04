@@ -989,11 +989,10 @@ function renderNudge(){
   var title = 'Dodaj aplikację do ekranu głównego', body = '', acts = '';
   var why = '<p>Otwiera się jednym stuknięciem, działa bez internetu, a Twoje dni zapisują się bezpieczniej.</p>';
   if(IN_APP){
-    title = 'Otwórz w przeglądarce, żeby zainstalować';
-    body = '<p>Z Messengera i podobnych aplikacji nie da się dodać apki do ekranu.</p><ul class="howto"><li>'
-         + (OS === 'ios' ? K('⋯') + ' w rogu → ' + K('Otwórz w przeglądarce') + ', potem w Safari: ' + IOS_STEPS
-                         : K('⋮') + ' w rogu → ' + K('Otwórz w Chrome'))
-         + '</li></ul>';
+    // only one thing to do here: leave the in-app browser; install steps come once the page is in Safari/Chrome
+    title = 'Otwórz w ' + (OS === 'ios' ? 'Safari' : 'przeglądarce');
+    body = '<p>Ta strona jest otwarta wewnątrz innej aplikacji. Otwórz ją w ' + (OS === 'ios' ? 'Safari' : 'Chrome') + ', żeby móc ją zainstalować.</p>'
+         + '<ul class="howto"><li>' + (OS === 'ios' ? K('⋯') : K('⋮')) + ' w rogu → ' + K('Otwórz w przeglądarce') + '</li></ul>';
     acts = '<button type="button" class="btn primary" data-nudge="copy">Kopiuj link</button>';
   } else if(OS === 'ios'){
     body = why + '<ul class="howto"><li>' + (IOS_OTHER ? 'Najłatwiej w Safari. Otwórz tę stronę w Safari, potem: ' : '') + IOS_STEPS + '</li></ul>'
