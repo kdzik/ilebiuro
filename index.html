@@ -197,6 +197,12 @@ dialog{border:0;padding:0;background:var(--card);color:var(--ink);border-radius:
   transform-origin:var(--ox,100%) var(--oy,0);
   box-shadow:0 12px 40px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.08)}
 dialog::backdrop{background:rgba(14,12,11,.32)}
+/* onboarding video: centred, sized to the screen height */
+dialog.vdlg{inset:0;top:0;right:0;margin:auto;width:auto;max-width:calc(100vw - 24px);height:max-content;max-height:calc(100dvh - 24px);padding:10px 12px 12px;overflow:hidden;transform-origin:50% 50%}
+dialog.vdlg::backdrop{background:rgba(14,12,11,.78)}
+.vhead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 2px 8px}
+.vhead h2{margin:0;font-size:18px;font-weight:700}
+.vdlg video{display:block;height:min(640px,calc(100dvh - 100px));width:auto;max-width:100%;aspect-ratio:450/978;border-radius:14px;background:#000;margin:0 auto}
 /* settings: what matters is open, everything optional is a collapsed row */
 .dlg{padding:14px 16px 18px;display:flex;flex-direction:column;gap:14px}
 .dlg-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -400,9 +406,15 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
           <li><b>Android:</b> <span class="key">⋮</span> → <span class="key">Zainstaluj aplikację</span></li>
         </ul>
         <p class="note">Działa wtedy jak zwykła apka, także bez internetu.</p>
+        <button type="button" class="btn" id="howtoVideoBtn">▶ Film: jak zainstalować na iPhonie</button>
       </div>
     </details>
   </form>
+</dialog>
+<!-- onboarding video (testing): opened only from settings; the file loads on first open -->
+<dialog id="vdlg" class="vdlg" aria-labelledby="vdlgTitle">
+  <div class="vhead"><h2 id="vdlgTitle">Instalacja na iPhonie</h2><button type="button" class="xclose" id="vclose" aria-label="Zamknij"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <video id="howtoVideo" muted loop playsinline preload="none" poster="onboarding-ios.jpg" aria-label="Film: jak dodać aplikację do ekranu początkowego iPhone'a"></video>
 </dialog>
 <div class="toast" id="toast"></div>
 
@@ -831,6 +843,21 @@ function renderRuleSet(){
   }).join('');
 }
 $('addRule').addEventListener('click', function(){ state.settings.rules.push({n:1, d:[1]}); save(); renderRuleSet(); render(); });
+// onboarding video: load the file only when someone opens it; stop it on close
+var vdlg = $('vdlg'), vid = $('howtoVideo');
+$('howtoVideoBtn').addEventListener('click', function(){
+  if(!vid.getAttribute('src')) vid.src = 'onboarding-ios.mp4';
+  if(vdlg.showModal) vdlg.showModal(); else vdlg.setAttribute('open','');
+  try{ vid.currentTime = 0; }catch(e){}
+  var p = vid.play(); if(p && p.catch) p.catch(function(){});
+});
+function closeVideo(){ vid.pause(); if(vdlg.open) vdlg.close(); }
+$('vclose').addEventListener('click', closeVideo);
+vdlg.addEventListener('click', function(e){
+  var r = vdlg.getBoundingClientRect();   // only a tap outside the panel (on the dimmed backdrop) closes it
+  if(e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeVideo();
+});
+vdlg.addEventListener('cancel', function(){ vid.pause(); });
 function openSettings(){
   renderAmount(); renderRuleSet();
   $('settingsBtn').classList.add('spin');

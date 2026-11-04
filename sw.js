@@ -1,5 +1,5 @@
 // Offline cache for Dni w Biurze. Only files from this site; no external requests.
-const VERSION = 'biuro-v67';
+const VERSION = 'biuro-v68';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -16,6 +16,8 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  // videos: let the browser stream them directly (Safari needs range requests the cache can't answer)
+  if (/\.mp4$/i.test(new URL(req.url).pathname)) return;
   if (req.mode === 'navigate') {
     e.respondWith(
       // no-cache: always ask the server (cheap 304 if unchanged), never a stale HTTP-cached page
