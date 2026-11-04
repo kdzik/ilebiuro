@@ -198,11 +198,18 @@ dialog{border:0;padding:0;background:var(--card);color:var(--ink);border-radius:
   box-shadow:0 12px 40px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.08)}
 dialog::backdrop{background:rgba(14,12,11,.32)}
 /* onboarding video: centred, sized to the screen height */
-dialog.vdlg{inset:0;top:0;right:0;margin:auto;width:auto;max-width:calc(100vw - 24px);height:max-content;max-height:calc(100dvh - 24px);padding:10px 12px 12px;overflow:hidden;transform-origin:50% 50%}
+dialog.vdlg{inset:0;top:0;right:0;margin:auto;width:auto;max-width:calc(100vw - 24px);height:max-content;max-height:calc(100dvh - 24px);padding:10px 12px 12px;overflow:auto}
+/* Safari may draw a video black inside a scaled or clipped parent: this dialog only fades in */
+dialog.vdlg[open]{animation:fadeIn .2s ease}
 dialog.vdlg::backdrop{background:rgba(14,12,11,.78)}
 .vhead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 2px 8px}
 .vhead h2{margin:0;font-size:18px;font-weight:700}
-.vdlg video{display:block;height:min(640px,calc(100dvh - 100px));width:auto;max-width:100%;aspect-ratio:450/978;border-radius:14px;background:#000;margin:0 auto}
+.vdlg video{display:block;--vh:min(560px, calc(100dvh - 200px));height:var(--vh);width:calc(var(--vh) * 450 / 978);max-width:100%;background:#000;margin:0 auto}
+.vsteps{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px}
+.vsteps button{height:38px;border:0;border-radius:999px;background:var(--seg-track);color:var(--ink);font-weight:700;font-size:15px;cursor:pointer}
+.vsteps button[aria-current="true"]{background:var(--oxide);color:var(--on-oxide)}
+.verr{margin-top:10px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.verr p{margin:0;color:var(--muted)}
 /* settings: what matters is open, everything optional is a collapsed row */
 .dlg{padding:14px 16px 18px;display:flex;flex-direction:column;gap:14px}
 .dlg-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -432,7 +439,19 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
 <!-- onboarding video (testing): opened only from settings; the file loads on first open -->
 <dialog id="vdlg" class="vdlg" aria-labelledby="vdlgTitle">
   <div class="vhead"><h2 id="vdlgTitle">Instalacja na iPhonie</h2><button type="button" class="xclose" id="vclose" aria-label="Zamknij"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-  <video id="howtoVideo" muted loop playsinline preload="none" poster="onboarding-ios.jpg" aria-label="Film: jak dodać aplikację do ekranu początkowego iPhone'a"></video>
+  <video id="howtoVideo" controls muted playsinline preload="none" poster="onboarding-ios.jpg" aria-label="Film: jak dodać aplikację do ekranu początkowego iPhone'a"></video>
+  <div class="vsteps" id="vsteps" role="group" aria-label="Przejdź do kroku">
+    <button type="button" data-t="2.4" aria-label="Krok 1: Stuknij •••">1</button>
+    <button type="button" data-t="7.3" aria-label="Krok 2: Udostępnij">2</button>
+    <button type="button" data-t="12.4" aria-label="Krok 3: Przesuń menu w górę">3</button>
+    <button type="button" data-t="17.6" aria-label="Krok 4: Do ekranu głównego">4</button>
+    <button type="button" data-t="23.4" aria-label="Krok 5: Otwórz jako aplikację www">5</button>
+    <button type="button" data-t="27.4" aria-label="Krok 6: Dodaj">6</button>
+  </div>
+  <div class="verr" id="vErr" hidden>
+    <p>Nie udało się załadować filmu. Kroki: <b>•••</b> → <b>Udostępnij</b> → <b>Do ekranu głównego</b> → <b>Dodaj</b>.</p>
+    <button type="button" class="btn" id="vRetry">Spróbuj ponownie</button>
+  </div>
 </dialog>
 <div class="nudge" id="nudge" hidden><div class="sheet" role="dialog" aria-labelledby="nudgeTitle" id="nudgeSheet"></div></div>
 <div class="toast" id="toast"></div>
@@ -865,12 +884,27 @@ $('addRule').addEventListener('click', function(){ state.settings.rules.push({n:
 // onboarding video: load the file only when someone opens it; stop it on close
 var vdlg = $('vdlg'), vid = $('howtoVideo');
 $('howtoVideoBtn').addEventListener('click', openVideo);
+// native player controls (play, pause, seek, full screen); step buttons jump straight to a step
+function playVid(){ var p = vid.play(); if(p && p.catch) p.catch(function(){ /* autoplay blocked: the controls stay to start it */ }); }
 function openVideo(){
-  if(!vid.getAttribute('src')) vid.src = 'onboarding-ios.mp4';
+  $('vErr').hidden = true;
+  if(!vid.getAttribute('src')){ vid.src = 'onboarding-ios.mp4'; vid.load(); }
   if(vdlg.showModal) vdlg.showModal(); else vdlg.setAttribute('open','');
   try{ vid.currentTime = 0; }catch(e){}
-  var p = vid.play(); if(p && p.catch) p.catch(function(){});
+  playVid();
 }
+$('vsteps').addEventListener('click', function(e){
+  var b = e.target.closest('[data-t]'); if(!b) return;
+  try{ vid.currentTime = +b.dataset.t; }catch(err){}
+  playVid();
+});
+vid.addEventListener('timeupdate', function(){
+  var t = vid.currentTime, cur = null;
+  document.querySelectorAll('#vsteps [data-t]').forEach(function(b){ if(t >= +b.dataset.t - 0.05) cur = b; });
+  document.querySelectorAll('#vsteps [data-t]').forEach(function(b){ b.setAttribute('aria-current', b === cur ? 'true' : 'false'); });
+});
+vid.addEventListener('error', function(){ $('vErr').hidden = false; });
+$('vRetry').addEventListener('click', function(){ $('vErr').hidden = true; vid.load(); playVid(); });
 function closeVideo(){ vid.pause(); if(vdlg.open) vdlg.close(); }
 $('vclose').addEventListener('click', closeVideo);
 vdlg.addEventListener('click', function(e){
