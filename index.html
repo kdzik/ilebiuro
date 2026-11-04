@@ -402,8 +402,8 @@ dialog.closing::backdrop{animation:fadeOut .18s ease-in forwards}
       <div class="optbody">
         <button type="button" class="btn primary" id="installBtn" hidden>Zainstaluj aplikację</button>
         <ul class="howto" id="howto">
-          <li><b>iPhone:</b> <span class="key">Udostępnij</span> → <span class="key">Do ekranu początkowego</span></li>
-          <li><b>Android:</b> <span class="key">⋮</span> → <span class="key">Zainstaluj aplikację</span></li>
+          <li id="howtoIos"><b>iPhone (Safari):</b> <span class="key">•••</span> → <span class="key">Udostępnij</span> → <span class="key">Do ekranu głównego</span> → <span class="key">Dodaj</span></li>
+          <li id="howtoAndroid"><b>Android:</b> <span class="key">⋮</span> → <span class="key">Zainstaluj aplikację</span></li>
         </ul>
         <p class="note">Działa wtedy jak zwykła apka, także bez internetu.</p>
         <button type="button" class="btn" id="howtoVideoBtn">▶ Film: jak zainstalować na iPhonie</button>
@@ -942,6 +942,11 @@ var tt; function toast(m){ var t=$('toast'); t.textContent=m; t.classList.add('o
 
 // PWA
 var deferred;
+// show only what fits this phone: iPhone gets its steps and the video, Android the one-tap button
+var OS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'ios'
+       : /Android/i.test(navigator.userAgent) ? 'android' : 'other';
+if(OS === 'ios'){ $('howtoAndroid').hidden = true; }
+if(OS === 'android'){ $('howtoIos').hidden = true; $('howtoVideoBtn').hidden = true; }
 // Android / desktop Chrome & Edge: one-tap install button. iPhone has no such API, so it keeps the manual steps.
 window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferred = e; $('installBtn').hidden = false; $('howto').hidden = true; });
 $('installBtn').addEventListener('click', function(){
