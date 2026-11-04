@@ -977,14 +977,14 @@ $('installBtn').addEventListener('click', function(){
 });
 window.addEventListener('appinstalled', function(){ $('installInfo').hidden = true; hideNudge(); });
 
-// ---- install nudge: in a phone browser (not the installed app) suggest installing on every visit;
-// "Nie teraz" hides it only for the current browser session
-var NUDGE_KEY = 'dniWBiurze.installNudge', UA = navigator.userAgent;
-try{ localStorage.removeItem(NUDGE_KEY); }catch(e){}   // old 3-day snooze, no longer used
+// ---- install nudge: in a phone browser (not the installed app) suggest installing every time the page
+// is opened: on each load, and when coming back after the page was in the background for a while.
+// "Nie teraz" only closes it for now.
+var NUDGE_KEY = 'dniWBiurze.installNudge', NUDGE_BACK_MS = 60 * 1000, UA = navigator.userAgent;
+try{ localStorage.removeItem(NUDGE_KEY); sessionStorage.removeItem(NUDGE_KEY); }catch(e){}   // old snoozes, no longer used
 var IN_APP = /FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram|MicroMessenger|Line\/|TikTok|musical_ly|Snapchat|LinkedInApp|Twitter/i.test(UA);
 var IOS_OTHER = OS === 'ios' && /CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(UA);   // Chrome, Firefox, Edge… on iPhone
 function isInstalled(){ try{ return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }catch(e){ return false; } }
-function nudgeSnoozed(){ try{ return sessionStorage.getItem(NUDGE_KEY) === '1'; }catch(e){ return false; } }
 function K(t){ return '<span class="key">' + t + '</span>'; }
 var IOS_STEPS = K('•••') + ' → ' + K('Udostępnij') + ' → ' + K('Do ekranu głównego') + ' → ' + K('Dodaj');
 function renderNudge(){
@@ -1009,7 +1009,7 @@ function renderNudge(){
     + '<div class="acts">' + acts + '<button type="button" class="btn later" data-nudge="later">Nie teraz</button></div>';
 }
 function showNudge(){
-  if(isInstalled() || nudgeSnoozed() || (OS !== 'ios' && OS !== 'android')) return;
+  if(isInstalled() || (OS !== 'ios' && OS !== 'android') || !$('nudge').hidden) return;
   renderNudge(); $('nudge').hidden = false;
   requestAnimationFrame(function(){ requestAnimationFrame(function(){ $('nudge').classList.add('on'); }); });
 }
@@ -1021,7 +1021,7 @@ $('nudge').addEventListener('click', function(e){
   var b = e.target.closest('[data-nudge]');
   var a = b ? b.dataset.nudge : (e.target === $('nudge') ? 'later' : null);
   if(!a) return;
-  if(a === 'later'){ try{ sessionStorage.setItem(NUDGE_KEY, '1'); }catch(err){} hideNudge(); }
+  if(a === 'later') hideNudge();
   if(a === 'video') openVideo();
   if(a === 'install') $('installBtn').click();
   if(a === 'copy'){
@@ -1032,6 +1032,12 @@ $('nudge').addEventListener('click', function(e){
 // Android may offer the install button a moment after load: refresh the sheet when it does
 window.addEventListener('beforeinstallprompt', function(){ if(!$('nudge').hidden) renderNudge(); });
 setTimeout(showNudge, 1200);
+var hiddenAt = 0;
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden){ hiddenAt = Date.now(); return; }
+  if(hiddenAt && Date.now() - hiddenAt >= NUDGE_BACK_MS) setTimeout(showNudge, 600);
+});
+window.addEventListener('pageshow', function(e){ if(e.persisted) setTimeout(showNudge, 600); });
 if('serviceWorker' in navigator && location.protocol === 'https:'){
   // Installed apps are often only resumed, not reopened, so nothing would ever check for
   // a new version. Check on start and every time the app comes back to the foreground;
