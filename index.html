@@ -977,12 +977,14 @@ $('installBtn').addEventListener('click', function(){
 });
 window.addEventListener('appinstalled', function(){ $('installInfo').hidden = true; hideNudge(); });
 
-// ---- install nudge: in a phone browser (not the installed app) suggest installing, at most every few days
-var NUDGE_KEY = 'dniWBiurze.installNudge', NUDGE_SNOOZE_DAYS = 3, UA = navigator.userAgent;
+// ---- install nudge: in a phone browser (not the installed app) suggest installing on every visit;
+// "Nie teraz" hides it only for the current browser session
+var NUDGE_KEY = 'dniWBiurze.installNudge', UA = navigator.userAgent;
+try{ localStorage.removeItem(NUDGE_KEY); }catch(e){}   // old 3-day snooze, no longer used
 var IN_APP = /FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram|MicroMessenger|Line\/|TikTok|musical_ly|Snapchat|LinkedInApp|Twitter/i.test(UA);
 var IOS_OTHER = OS === 'ios' && /CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(UA);   // Chrome, Firefox, Edge… on iPhone
 function isInstalled(){ try{ return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }catch(e){ return false; } }
-function nudgeSnoozed(){ try{ return +localStorage.getItem(NUDGE_KEY) > Date.now(); }catch(e){ return false; } }
+function nudgeSnoozed(){ try{ return sessionStorage.getItem(NUDGE_KEY) === '1'; }catch(e){ return false; } }
 function K(t){ return '<span class="key">' + t + '</span>'; }
 var IOS_STEPS = K('•••') + ' → ' + K('Udostępnij') + ' → ' + K('Do ekranu głównego') + ' → ' + K('Dodaj');
 function renderNudge(){
@@ -1019,7 +1021,7 @@ $('nudge').addEventListener('click', function(e){
   var b = e.target.closest('[data-nudge]');
   var a = b ? b.dataset.nudge : (e.target === $('nudge') ? 'later' : null);
   if(!a) return;
-  if(a === 'later'){ try{ localStorage.setItem(NUDGE_KEY, String(Date.now() + NUDGE_SNOOZE_DAYS * 864e5)); }catch(err){} hideNudge(); }
+  if(a === 'later'){ try{ sessionStorage.setItem(NUDGE_KEY, '1'); }catch(err){} hideNudge(); }
   if(a === 'video') openVideo();
   if(a === 'install') $('installBtn').click();
   if(a === 'copy'){
